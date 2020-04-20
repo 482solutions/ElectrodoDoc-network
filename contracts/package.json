@@ -1,0 +1,24 @@
+{
+  "name": "contracts",
+  "version": "1.0.0",
+  "description": "\"PoC of decentralize energy blockchain\"",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "fabric-chaincode-node start",
+    "test": "mocha"
+  },
+  "keywords": [
+    "fabric"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "fabric-contract-api": "1.4.2",
+    "fabric-shim": "1.4.2"
+  },
+  "devDependencies": {
+    "@theledger/fabric-mock-stub": "4.0.0",
+    "chai": "4.2.0",
+    "mocha": "6.2.0"
+  }
+}

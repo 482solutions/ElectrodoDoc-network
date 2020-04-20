@@ -1,0 +1,14 @@
+version: "3"
+
+services:
+  orderer:
+    image: hyperledger/fabric-peer:1.4
+    container_name: fabric_peer
+    working_dir: /etc/hyperledger/fabric
+    volumes:
+      - ./data:/etc/hyperledger/fabric
+      - /var/run/:/host/var/run/
+    ports:
+      - 7051:7051
+      - 7052:7052
+    command: peer node start

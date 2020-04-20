@@ -1,0 +1,12 @@
+version: "3"
+
+services:
+  orderer:
+    image: hyperledger/fabric-orderer:1.4
+    container_name: fabric_orderer
+    working_dir: /etc/hyperledger/fabric
+    volumes:
+      - ./data:/etc/hyperledger/fabric
+    ports:
+      - 7050:7050
+    command: orderer
