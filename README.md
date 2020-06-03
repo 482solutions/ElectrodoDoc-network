@@ -1,4 +1,4 @@
-# Fabric electricity market (chain codes and network configuration)
+# Fabric woden (chain codes and network configuration)
 
 ## Prerequisites
 
