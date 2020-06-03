@@ -1,4 +1,4 @@
-const EnergyContract = require('./energy');
-const MarketContract = require('./market');
 
-module.exports.contracts = [EnergyContract, MarketContract];
+const FileSystemContract = require('./fileSystem');
+
+module.exports.contracts = [FileSystemContract];

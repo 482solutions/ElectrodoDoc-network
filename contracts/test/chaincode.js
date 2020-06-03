@@ -1,10 +1,11 @@
 'use strict';
 
 const shim = require('fabric-shim');
+// const  shim = require('fabric-contract-api');
 const contracts = require('../src');
 
-const energy = new contracts.contracts[0]();
-const market = new contracts.contracts[1]();
+
+const fileSystem = new contracts.contracts[0]();
 
 class Chaincode {
     /**
@@ -12,18 +13,12 @@ class Chaincode {
      * It will be further refactored
      */
     constructor() {
-        this.energyProposals = new Map();
-        this.balances = new Map();
-        this.registerUser = market.registerUser;
-        this.getUser = market.getUser;
-        this.buyCoins = market.buyCoins.bind(this);
-        this.generate = energy.generate.bind(this);
-        this.consume = energy.consume.bind(this);
-        this.sell = market.sell.bind(this);
-        this.getTotalProposal = market.getTotalProposal;
-        this.buy = market.buy.bind(this);
-        this.getPrice = market.getPrice;
-        this.getMarket = market.getMarket;
+        this.saveFolder = fileSystem.saveFolder.bind(this);
+        this.getFolder = fileSystem.getFolder;
+        this.saveFile = fileSystem.saveFile.bind(this);
+        this.updateFile = fileSystem.updateFile.bind(this);
+        this.getFile = fileSystem.getFile;
+
     }
 
     async Init(stub) {
@@ -58,16 +53,17 @@ class Chaincode {
 
     async initLedger(stub, args) {
         console.info('============= START : Initialize Ledger ===========');
-        const market = {
-            coins: 1000000,
-            energy: 0
-        }
+        let folder = {
+            folderName: 'testname',
+            folderHash: 'testhash',
+            reedUsers: ['testarrayreed'],
+            writeUsers: ['testarraywrite'],
+            ownerId: 'admin'
+        };
         await stub.putState(
-            'market',
-            Buffer.from(JSON.stringify(market))
+            'fileSystem',
+            Buffer.from(JSON.stringify(folder))
         );
-        const initialPrice = 1;
-        await stub.putState('energyPrice', initialPrice);
         console.info('============= END : Initialize Ledger ===========');
     }
 }
