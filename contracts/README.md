@@ -1,13 +1,12 @@
-# Fabric electricity market (chain codes and network configuration)
+# Fabric woden (chain codes and network configuration)
 
 # Fabric-core contracts
 
 
 
-These smart contracts implement the logic of the blockchain. Energy contract
+These smart contracts implement the logic of the blockchain. File System contract
 
- records the generated and consumed energy, and the Market contract provides the functionality necessary for the exchange of energy between network participants.
-
+ store information about files and folders in blockchain.
 
 
 
@@ -28,256 +27,53 @@ instantiate chaincode. For details see `[Fabric-shim tutorial](https://fabric-sh
 
 ```
 
-`contractClassName`'s are: `org.fabric.energycontract` and `org.fabric.marketcontract`;
+`contractClassName`'s are: `org.fabric.filesystemcontract`;
 
 `contractName`- the name given to the contract during installation.
 
 
 
-## Market contract API
+## File System contract API
 
 
 
-#### registerUser()
+#### saveFolder ( folderName, folderHash)
 
-Registers a new user
-
-
+Save information about folder
 
 *Returns*:
 
-User descriptor stored on blockchain: ```{userId, coins, energy}```
+Folder descriptor stored on blockchain: ```{ folderName, folderHash, reedUsers, writeUsers, ownerId}```
 
+#### getFolder(folderHash)
 
-
-#### sell(energy)
-
-Caller is selling energy on the market
-
-
-
-*Parameters*:
-
-
-
-| Name  | Type |Description |
-
-| ------------- | ------------- |------------- |
-
-| energy  | Number  |Amount of energy to sell  |
-
-
-
-#### buy(energy)
-
-Caller is buying energy on the market
-
-
-
-*Parameters*:
-
-
-
-| Name  | Type |Description |
-
-| ------------- | ------------- |------------- |
-
-| energy  | Number  |Amount of energy to buy  |
-
-
-
-#### buyCoins(coins)
-
-Caller buys virtual money to pay for energy
-
-
-
-*Parameters*:
-
-
-
-| Name  | Type |Description |
-
-| ------------- | ------------- |------------- |
-
-| coins  | Number  |Amount of money to buy  |
-
-
-
-#### getUser(userId)
-
-Provides information about the user with the given id
-
-
-
-*Parameters*:
-
-
-
-| Name  | Type |Description |
-
-| ------------- | ------------- |------------- |
-
-| userId  | Number  |id of the user  |
-
-
+Provides information about the folder with the given hash
 
 *Returns*:
 
-User descriptor in format```{userId,coins,energy}```
+Folder descriptor in format```{ folderName, folderHash, reedUsers, writeUsers, ownerId}```
 
+#### saveFile (fileName, fileHash, fileCID)
 
-
-#### setPrice(price)
-
-Sets a new  energy price
-
-
-
-*Parameters*:
-
-
-
-| Name  | Type |Description |
-
-| ------------- | ------------- |------------- |
-
-| price  | Number  |new energy price  |
-
-
-
-#### getPrice()
-
-Gets current energy price
-
-
+Save information about file and it versions(CID) 
 
 *Returns*:
 
-The price of energy in virtual currency
+File descriptor stored on blockchain: ```{ fileName, fileHash, versions, reedUsers, writeUsers, ownerId}```
 
+#### updateFile (fileHash, fileCID)
 
-
-#### getMarket()
-
-Provides information on the supply of energy and virtual currency in the market
-
-
+Save information about file versions(CID) 
 
 *Returns*:
 
-Market descriptor in format ```{coins,energy}```
+File descriptor updated on blockchain: ```{ fileName, fileHash, versions, reedUsers, writeUsers, ownerId}```
 
+#### getFile(fileHash)
 
-
-## Energy contract API
-
-
-
-#### generate(energy)
-
-Records caller energy generation
-
-
+Provides information about the file with the given hash
 
 *Returns*:
 
-User descriptor stored on blockchain: ```{userId, coins, energy}```
+Folder descriptor in format```{ fileName, fileHash, versions, reedUsers, writeUsers, ownerId}```
 
-
-
-*Parameters*:
-
-
-
-| Name  | Type |Description |
-
-| ------------- | ------------- |------------- |
-
-| energy  | Number  |Energy generation  |
-
-
-
-#### consume(energy)
-
-Records caller energy consumption
-
-
-
-*Returns*:
-
-User descriptor stored on blockchain: ```{userId, coins, energy}```
-
-
-
-*Parameters*:
-
-
-
-| Name  | Type |Description |
-
-| ------------- | ------------- |------------- |
-
-| energy  | Number  |Energy consumption  |
-
-
-
-#### transfer(energyReceiverId, energy)
-
-The caller transfers energy to another user
-
-
-
-*Parameters*:
-
-
-
-| Name  | Type |Description |
-
-| ------------- | ------------- |------------- |
-
-| energyReceiverId  | string  |receiver id   |
-
-| energy  | Number  |energy to transfer   |
-
-
-
-*Returns*:
-
-Updated states of both participants in the format 
-
- ```
-
- {
-
-	sender:{userId, coins, energy},
-
-	receiver:{userId, coins, energy}
-
-} 
-
-```
-
-
-
-#### balanceOf(userId)
-
-Returns the amount of energy on the balance of the caller
-
-
-
-*Returns*:
-
-Amount of energy
-
-
-
-*Parameters*:
-
-
-
-| Name  | Type |Description |
-
-| ------------- | ------------- |------------- |
-
-| userId  | string  |id of user  |
