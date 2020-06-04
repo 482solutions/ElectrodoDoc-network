@@ -1,4 +1,4 @@
 
-const FileSystemContract = require('./fileSystem');
+const MarketContract = require('./market');
 
-module.exports.contracts = [FileSystemContract];
+module.exports.contracts = [ MarketContract];

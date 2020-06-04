@@ -76,4 +76,3 @@ Provides information about the file with the given hash
 *Returns*:
 
 Folder descriptor in format```{ fileName, fileHash, versions, reedUsers, writeUsers, ownerId}```
-

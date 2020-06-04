@@ -1,11 +1,11 @@
 NodeOUs:
   Enable: true
   ClientOUIdentifier:
-    Certificate: cacerts/167-71-49-240-7054.pem
+    Certificate: cacerts/172-28-0-3-7054.pem
     OrganizationalUnitIdentifier: client
   PeerOUIdentifier:
-    Certificate: cacerts/167-71-49-240-7054.pem
+    Certificate: cacerts/172-28-0-3-7054.pem
     OrganizationalUnitIdentifier: peer
   OrdererOUIdentifier:
-    Certificate: cacerts/167-71-49-240-7054.pem
+    Certificate: cacerts/172-28-0-3-7054.pem
     OrganizationalUnitIdentifier: peer

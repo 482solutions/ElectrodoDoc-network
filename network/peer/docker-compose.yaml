@@ -12,3 +12,10 @@ services:
       - 7051:7051
       - 7052:7052
     command: peer node start
+    networks:
+      front_default:
+        ipv4_address: 172.28.0.4
+
+networks:
+  front_default:
+    external: true
