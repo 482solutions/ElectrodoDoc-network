@@ -51,7 +51,7 @@ Organizations:
         # cross-org gossip communication. Note, this value is only encoded in
         # the genesis block in the Application section context.
         AnchorPeers:
-            - Host: 165.22.77.44
+            - Host: 172.28.0.4
               Port: 7051
 
 ################################################################################
@@ -352,7 +352,7 @@ Profiles:
         Orderer:
             <<: *OrdererDefaults
             Addresses:
-                - 157.230.99.123:7050
+                - 172.28.0.5:7050
             Organizations:
                 - *482solutions
         

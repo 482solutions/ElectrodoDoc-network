@@ -10,3 +10,10 @@ services:
     ports:
       - 7050:7050
     command: orderer
+    networks:
+      front_default:
+         ipv4_address: 172.28.0.5
+
+networks:
+  front_default:
+    external: true
