@@ -18,6 +18,8 @@ class Chaincode {
         this.saveFile = fileSystem.saveFile.bind(this);
         this.updateFile = fileSystem.updateFile.bind(this);
         this.getFile = fileSystem.getFile;
+        this.changeOwnership = fileSystem.changeOwnership.bind(this)
+        this.changePermissions = fileSystem.changePermissions.bind(this)
 
     }
 
