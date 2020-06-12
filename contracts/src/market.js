@@ -28,7 +28,7 @@ class Market extends Contract {
       ownerId: userId
     };
 
-    if (parentHash !== null) {
+    if (parentHash !== 'root') {
       const parentFolderAsBytes = await ctx.stub.getState(parentHash);
       let parentFolder = JSON.parse(parentFolderAsBytes.toString());
       if (parentFolder.ownerId !== userId) {

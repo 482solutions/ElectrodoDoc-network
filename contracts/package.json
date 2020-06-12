@@ -1,0 +1,29 @@
+{
+  "name": "contracts",
+  "version": "1.0.0",
+  "description": "contracts for woden",
+  "directories": {
+    "test": "test"
+  },
+  "main": "src/index.js",
+  "scripts": {
+    "install": "npm i",
+    "start": "fabric-chaincode-node start",
+    "test": "mocha"
+  },
+  "keywords": [
+    "woden"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+
+    "fabric-contract-api": "1.4.5",
+    "fabric-shim": "1.4.5"
+  },
+  "devDependencies": {
+    "@theledger/fabric-mock-stub": "4.0.0",
+    "chai": "4.2.0",
+    "mocha": "6.2.0"
+  }
+}
