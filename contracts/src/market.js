@@ -43,6 +43,11 @@ class Market extends Contract {
           return { message: 'You does not have permission: ' };
         }
       }
+      for (let i = 0; i < parentFolder.folders.length; i++) {
+        if (parentFolder.folders[i].name === name) {
+          return { message: 'Folder already exist' };
+        }
+      }
       parentFolder.folders.push({ name, hash })
       console.log(parentFolder)
       await ctx.stub.putState(parentHash, Buffer.from(JSON.stringify(parentFolder)));
@@ -82,6 +87,9 @@ class Market extends Contract {
     const identity = new ClientIdentity(ctx.stub);
     const userId = identity.cert.subject.commonName;
     const parentFolderAsBytes = await ctx.stub.getState(parentHash);
+    if (!parentFolderAsBytes || parentFolderAsBytes.toString().length <= 0) {
+      return {message: 'Parent folder with this hash does not exist'};
+    }
     let parentFolder = JSON.parse(parentFolderAsBytes.toString());
     if (parentFolder.ownerId !== userId) {
       let havePermission = false
@@ -121,7 +129,7 @@ class Market extends Contract {
     const userId = identity.cert.subject.commonName;
     let fileAsBytes = await ctx.stub.getState(hash);
     if (!fileAsBytes || fileAsBytes.toString().length <= 0) {
-      throw new Error('File with this hash does not exist: ');
+      return { message: 'File with this hash does not exist'};
     }
     let file = JSON.parse(fileAsBytes.toString());
     if (file.ownerId !== userId) {
@@ -149,7 +157,7 @@ class Market extends Contract {
     const userId = identity.cert.subject.commonName;
     let fileAsBytes = await ctx.stub.getState(hash);
     if (!fileAsBytes || fileAsBytes.toString().length <= 0) {
-      throw new Error('Folder with this hash does not exist: ');
+      return { message: 'File with this hash does not exist'};
     }
     const file = JSON.parse(fileAsBytes.toString());
     if (file.ownerId !== userId) {

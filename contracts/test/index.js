@@ -21,7 +21,7 @@ describe('Test chaincode\n', () => {
   it('Should be able to add folder', async () => {
     const response = await stub.mockInvoke(
       'txsaveFolder1',
-      ['saveFolder', 'folderTest1', 'folderhash12345', null]
+      ['saveFolder', 'folderTest1', 'folderhash12345', 'root']
     );
     expect(response.status).to.eq(200);
     folder = JSON.parse(response.payload);
@@ -54,6 +54,19 @@ describe('Test chaincode\n', () => {
     );
   });
 
+  it('Should be no able to add folder in folder with the same name', async () => {
+    const response = await stub.mockInvoke(
+      'txsaveFolder2',
+      ['saveFolder', 'folderTest2', 'folderhash1234567', 'folderhash12345']
+    );
+    console.log(response)
+    expect(response.status).to.eq(200);
+    assert(
+      response.payload.message === 'Folder already exist',
+      "folder name  match"
+    );
+  });
+
   it('Should be able to find folder by it hash', async () => {
     const folderToSearch = folder.folderHash;
     console.log('test.getFolder: folderHash=', folderToSearch);
@@ -65,7 +78,7 @@ describe('Test chaincode\n', () => {
   it('Should be able to add file', async () => {
     const response = await stub.mockInvoke(
       'txsaveFile1',
-      ['saveFile', 'fileTest1', 'filehash12345', 'fileCID11112345', 'folderhash12345']
+      ['saveFile', 'fileTest1', 'filehash12345', 'fileCID11112345', 'folderhash12345', 'TEXT']
     );
     expect(response.status).to.eq(200);
     folder = JSON.parse(response.payload);
