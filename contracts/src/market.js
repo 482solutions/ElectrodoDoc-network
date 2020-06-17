@@ -23,12 +23,24 @@ class Market extends Contract {
       parentFolderHash: parentHash,
       files: [],
       folders: [],
+      sharedFiles: [],
+      sharedFolders: [],
       readUsers: [],
       writeUsers: [],
       ownerId: userId
     };
 
     if (parentHash !== 'root') {
+      folder = {
+        folderName: name,
+        folderHash: hash,
+        parentFolderHash: parentHash,
+        files: [],
+        folders: [],
+        readUsers: [],
+        writeUsers: [],
+        ownerId: userId
+      };
       const parentFolderAsBytes = await ctx.stub.getState(parentHash);
       let parentFolder = JSON.parse(parentFolderAsBytes.toString());
       if (parentFolder.ownerId !== userId) {
@@ -49,7 +61,6 @@ class Market extends Contract {
         }
       }
       parentFolder.folders.push({ name, hash })
-      console.log(parentFolder)
       await ctx.stub.putState(parentHash, Buffer.from(JSON.stringify(parentFolder)));
       await ctx.stub.putState(hash, Buffer.from(JSON.stringify(folder)));
       return JSON.stringify(parentFolder)
@@ -88,7 +99,7 @@ class Market extends Contract {
     const userId = identity.cert.subject.commonName;
     const parentFolderAsBytes = await ctx.stub.getState(parentHash);
     if (!parentFolderAsBytes || parentFolderAsBytes.toString().length <= 0) {
-      return {message: 'Parent folder with this hash does not exist'};
+      return { message: 'Parent folder with this hash does not exist' };
     }
     let parentFolder = JSON.parse(parentFolderAsBytes.toString());
     if (parentFolder.ownerId !== userId) {
@@ -129,7 +140,7 @@ class Market extends Contract {
     const userId = identity.cert.subject.commonName;
     let fileAsBytes = await ctx.stub.getState(hash);
     if (!fileAsBytes || fileAsBytes.toString().length <= 0) {
-      return { message: 'File with this hash does not exist'};
+      return { message: 'File with this hash does not exist' };
     }
     let file = JSON.parse(fileAsBytes.toString());
     if (file.ownerId !== userId) {
@@ -157,7 +168,7 @@ class Market extends Contract {
     const userId = identity.cert.subject.commonName;
     let fileAsBytes = await ctx.stub.getState(hash);
     if (!fileAsBytes || fileAsBytes.toString().length <= 0) {
-      return { message: 'File with this hash does not exist'};
+      return { message: 'File with this hash does not exist' };
     }
     const file = JSON.parse(fileAsBytes.toString());
     if (file.ownerId !== userId) {
@@ -176,7 +187,7 @@ class Market extends Contract {
   }
 
 
-  async changeOwnership(ctx, hash, newOwner) {
+  async changeOwnership(ctx, hash, newOwner, hashThatShared, hashForShare) {
     const identity = new ClientIdentity(ctx.stub);
     const userId = identity.cert.subject.commonName;
     let objectAsBytes = await ctx.stub.getState(hash);
@@ -190,13 +201,37 @@ class Market extends Contract {
     object.ownerId = newOwner
     object.readUsers.push(userId)
     object.writeUsers.push(userId)
+
+    if (hashThatShared && hashForShare) {
+      let folderForShareAsBytes = await ctx.stub.getState(hashForShare);
+      if (!folderForShareAsBytes || folderForShareAsBytes.toString().length <= 0) {
+        throw new Error('Folder for share does not exist');
+      }
+      let folderThatSharedAsBytes = await ctx.stub.getState(hashThatShared);
+      if (!folderThatSharedAsBytes || folderThatSharedAsBytes.toString().length <= 0) {
+        throw new Error('Folder that shared does not exist');
+      }
+      let folderThatShared = JSON.parse(folderThatSharedAsBytes.toString());
+      let folderForShare = JSON.parse(folderForShareAsBytes.toString());
+      if (object.files || object.folders) {
+        folderForShare.folders.push({ name: object.folderName, hash: object.folderHash })
+        folderThatShared.folders.splice(folderThatShared.folders.findIndex(v => v.hash === object.folderHash && v.name === object.folderName), 1)
+        folderThatShared.sharedFolders.push({ name: object.folderName, hash: object.folderHash })
+      } else if (object.versions) {
+        folderForShare.files.push({ name: object.fileName, hash: object.fileHash })
+        folderThatShared.files.splice(folderThatShared.files.findIndex(v => v.hash === object.fileHash && v.name === object.fileName), 1);
+        folderThatShared.sharedFiles.push({ name: object.fileName, hash: object.fileHash })
+      }
+      await ctx.stub.putState(hashThatShared, Buffer.from(JSON.stringify(folderThatShared)));
+      await ctx.stub.putState(hashForShare, Buffer.from(JSON.stringify(folderForShare)));
+    }
     if (object.files || object.folders) {
       for (let i = 0; i < object.files.length; i++) {
-        let response = await this.changeOwnership(ctx, object.files[i].hash, newOwner)
+        let response = await this.changeOwnership(ctx, object.files[i].hash, newOwner, null, null)
         console.log(response)
       }
       for (let j = 0; j < object.folders.length; j++) {
-        let response = await this.changeOwnership(ctx, object.folders[j].hash, newOwner)
+        let response = await this.changeOwnership(ctx, object.folders[j].hash, newOwner, null, null)
         console.log(response)
       }
     }
@@ -204,7 +239,7 @@ class Market extends Contract {
     return JSON.stringify(object)
   }
 
-  async changePermissions(ctx, hash, login, action, permissions) {
+  async changePermissions(ctx, hash, login, action, permissions, hashForShare) {
     const identity = new ClientIdentity(ctx.stub);
     const userId = identity.cert.subject.commonName;
     let objectAsBytes = await ctx.stub.getState(hash);
@@ -223,6 +258,19 @@ class Market extends Contract {
       if (!havePermission) {
         return { message: 'You does not have permission: ' };
       }
+    }
+    if (hashForShare) {
+      let folderForShareAsBytes = await ctx.stub.getState(hashForShare);
+      if (!folderForShareAsBytes || folderForShareAsBytes.toString().length <= 0) {
+        throw new Error('Folder for share does not exist');
+      }
+      let folderForShare = JSON.parse(folderForShareAsBytes.toString());
+      if (object.files || object.folders) {
+        folderForShare.sharedFolders.push({ name: object.folderName, hash: object.folderHash })
+      } else if (object.versions) {
+        folderForShare.sharedFiles.push({ name: object.fileName, hash: object.fileHash })
+      }
+      await ctx.stub.putState(hashForShare, Buffer.from(JSON.stringify(folderForShare)));
     }
     if (action === 'allow') {
       if (permissions === 'read') {
@@ -254,11 +302,21 @@ class Market extends Contract {
 
     if (object.files || object.folders) {
       for (let i = 0; i < object.files.length; i++) {
-        let response = await this.changePermissions(ctx, object.files[i].hash, login,action,  permissions)
+        let response = await this.changePermissions(ctx,
+          object.files[i].hash,
+          login,
+          action,
+          permissions,
+          null)
         console.log(response)
       }
       for (let j = 0; j < object.folders.length; j++) {
-        let response = await this.changePermissions(ctx, object.folders[j].hash, login, action, permissions)
+        let response = await this.changePermissions(ctx,
+          object.folders[j].hash,
+          login,
+          action,
+          permissions,
+          null)
         console.log(response)
       }
     }

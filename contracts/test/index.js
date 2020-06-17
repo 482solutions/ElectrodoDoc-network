@@ -122,7 +122,7 @@ describe('Test chaincode\n', () => {
   it('Should be able to change owner of file', async () => {
     const response = await stub.mockInvoke(
       'txchangeOwnership1',
-      ['changeOwnership', 'folderhash12345', 'newTestOwner', ]
+      ['changeOwnership', 'folderhash12345', 'newTestOwner' ]
     );
     expect(response.status).to.eq(200);
     file = JSON.parse(response.payload);
