@@ -56,7 +56,7 @@ class Market extends Contract {
         }
       }
       for (let i = 0; i < parentFolder.folders.length; i++) {
-        if (parentFolder.folders[i].name === name) {
+        if (parentFolder.folders[i].hash === hash) {
           return { message: 'Folder already exist' };
         }
       }
@@ -114,6 +114,12 @@ class Market extends Contract {
         return { message: 'You does not have permission: ' };
       }
     }
+    for (let i = 0; i < parentFolder.files.length; i++) {
+      if (parentFolder.files[i].hash === hash) {
+        return { message: 'File already exist' };
+      }
+    }
+
     let file = {
       fileName: name,
       fileHash: hash,
