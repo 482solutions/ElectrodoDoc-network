@@ -76,7 +76,7 @@ class Market extends Contract {
 
     let folderAsBytes = await ctx.stub.getState(hash);
     if (!folderAsBytes || folderAsBytes.toString().length <= 0) {
-      throw new Error('Folder with this hash does not exist: ');
+      throw new Error('Folder with this hash does not exist');
     }
     const folder = JSON.parse(folderAsBytes.toString())
     if (folder.ownerId !== userId) {
@@ -88,7 +88,7 @@ class Market extends Contract {
         }
       }
       if (!havePermission) {
-        return { message: 'You does not have permission: ' };
+        return { message: 'You does not have permission' };
       }
     }
     let files = []
