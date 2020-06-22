@@ -297,8 +297,14 @@ class Market extends Contract {
       }
       let folderForShare = JSON.parse(folderForShareAsBytes.toString());
       if (object.files || object.folders) {
+        for (let i = 0; i < folderForShare.folders.length; i++) {
+          if (folderForShare.folders[i].hash === hash) {
+            return { message: 'Folder for share already include this file' };
+          }
+        }
         folderForShare.sharedFolders.push({ name: object.folderName, hash: object.folderHash })
       } else if (object.versions) {
+
         folderForShare.sharedFiles.push({ name: object.fileName, hash: object.fileHash })
       }
       await ctx.stub.putState(hashForShare, Buffer.from(JSON.stringify(folderForShare)));
