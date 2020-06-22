@@ -91,7 +91,18 @@ class Market extends Contract {
         return { message: 'You does not have permission: ' };
       }
     }
-    return folder;
+    let files = []
+    let folders = []
+    for (let i = 0; i < folder.folders.length; i++) {
+      let folderAsBytes = await ctx.stub.getState(folder.folders[i].hash);
+      folders.push(JSON.parse(folderAsBytes.toString()))
+    }
+    for (let j = 0; j < folder.files.length; j++) {
+      let fileAsBytes = await ctx.stub.getState(folder.files[j].hash);
+      files.push(JSON.parse(fileAsBytes.toString()))
+    }
+
+    return { folder, folders, files };
   }
 
   async saveFile(ctx, name, hash, cid, parentHash, type) {
@@ -198,11 +209,11 @@ class Market extends Contract {
     const userId = identity.cert.subject.commonName;
     let objectAsBytes = await ctx.stub.getState(hash);
     if (!objectAsBytes || objectAsBytes.toString().length <= 0) {
-      throw new Error('File with this hash does not exist: ');
+      return { message: 'File with this hash does not exist' };
     }
     let object = JSON.parse(objectAsBytes.toString());
     if (object.ownerId !== userId) {
-      throw new Error('You does not have permission: ');
+      return { message: 'You does not have permission' };
     }
     object.ownerId = newOwner
     object.readUsers.push(userId)
@@ -211,21 +222,35 @@ class Market extends Contract {
     if (hashThatShared && hashForShare) {
       let folderForShareAsBytes = await ctx.stub.getState(hashForShare);
       if (!folderForShareAsBytes || folderForShareAsBytes.toString().length <= 0) {
-        throw new Error('Folder for share does not exist');
+        return { message: 'Folder for share does not exist' };
       }
       let folderThatSharedAsBytes = await ctx.stub.getState(hashThatShared);
       if (!folderThatSharedAsBytes || folderThatSharedAsBytes.toString().length <= 0) {
-        throw new Error('Folder that shared does not exist');
+        return { message: 'Folder that shared does not exist' };
       }
       let folderThatShared = JSON.parse(folderThatSharedAsBytes.toString());
       let folderForShare = JSON.parse(folderForShareAsBytes.toString());
+
+
       if (object.files || object.folders) {
+        for (let i = 0; i < folderForShare.folders.length; i++) {
+          if (folderForShare.folders[i].hash === hash) {
+            return { message: 'Folder for share already include this file' };
+          }
+        }
         folderForShare.folders.push({ name: object.folderName, hash: object.folderHash })
-        folderThatShared.folders.splice(folderThatShared.folders.findIndex(v => v.hash === object.folderHash && v.name === object.folderName), 1)
+        folderThatShared.folders.splice(folderThatShared.folders.findIndex(v => v.hash === object.folderHash && v.name === object.folderName),
+          1)
         folderThatShared.sharedFolders.push({ name: object.folderName, hash: object.folderHash })
       } else if (object.versions) {
+        for (let i = 0; i < folderForShare.files.length; i++) {
+          if (folderForShare.files[i].hash === hash) {
+            return { message: 'Folder for share already include this file' };
+          }
+        }
         folderForShare.files.push({ name: object.fileName, hash: object.fileHash })
-        folderThatShared.files.splice(folderThatShared.files.findIndex(v => v.hash === object.fileHash && v.name === object.fileName), 1);
+        folderThatShared.files.splice(folderThatShared.files.findIndex(v => v.hash === object.fileHash && v.name === object.fileName),
+          1);
         folderThatShared.sharedFiles.push({ name: object.fileName, hash: object.fileHash })
       }
       await ctx.stub.putState(hashThatShared, Buffer.from(JSON.stringify(folderThatShared)));
@@ -250,7 +275,7 @@ class Market extends Contract {
     const userId = identity.cert.subject.commonName;
     let objectAsBytes = await ctx.stub.getState(hash);
     if (!objectAsBytes || objectAsBytes.toString().length <= 0) {
-      throw new Error('File with this hash does not exist: ');
+      return { message: 'File with this hash does not exist' };
     }
     let object = JSON.parse(objectAsBytes.toString());
     if (object.ownerId !== userId) {
@@ -262,13 +287,13 @@ class Market extends Contract {
         }
       }
       if (!havePermission) {
-        return { message: 'You does not have permission: ' };
+        return { message: 'You does not have permission' };
       }
     }
     if (hashForShare) {
       let folderForShareAsBytes = await ctx.stub.getState(hashForShare);
       if (!folderForShareAsBytes || folderForShareAsBytes.toString().length <= 0) {
-        throw new Error('Folder for share does not exist');
+        return { message: 'Folder for share does not exist' };
       }
       let folderForShare = JSON.parse(folderForShareAsBytes.toString());
       if (object.files || object.folders) {
