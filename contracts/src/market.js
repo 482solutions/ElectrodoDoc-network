@@ -215,6 +215,9 @@ class Market extends Contract {
     if (object.ownerId !== userId) {
       return { message: 'You does not have permission' };
     }
+    if (object.ownerId === newOwner) {
+      return { message: 'This user is the owner of this file' };
+    }
     object.ownerId = newOwner
     object.readUsers.push(userId)
     object.writeUsers.push(userId)
