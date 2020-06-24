@@ -42,7 +42,7 @@ class Market extends Contract {
         ownerId: userId
       };
       const parentFolderAsBytes = await ctx.stub.getState(parentHash);
-      let parentFolder = JSON.parse(parentFolderAsBytes.toString());
+      const parentFolder = JSON.parse(parentFolderAsBytes.toString());
       if (parentFolder.ownerId !== userId) {
         let havePermission = false
         for (let i = 0; i < parentFolder.writeUsers.length; i++) {
@@ -63,7 +63,18 @@ class Market extends Contract {
       parentFolder.folders.push({ name, hash })
       await ctx.stub.putState(parentHash, Buffer.from(JSON.stringify(parentFolder)));
       await ctx.stub.putState(hash, Buffer.from(JSON.stringify(folder)));
-      return JSON.stringify(parentFolder)
+      let files = []
+      let folders = []
+      for (let i = 0; i < parentFolder.folders.length-1; i++) {
+        let folderAsBytes = await ctx.stub.getState(parentFolder.folders[i].hash);
+        folders.push(JSON.parse(folderAsBytes.toString()))
+      }
+      for (let j = 0; j < parentFolder.files.length-1; j++) {
+        let fileAsBytes = await ctx.stub.getState(parentFolder.files[j].hash);
+        files.push(JSON.parse(fileAsBytes.toString()))
+      }
+      folders.push(folder)
+      return JSON.stringify({parentFolder, folders, files})
     }
 
     await ctx.stub.putState(hash, Buffer.from(JSON.stringify(folder)));
@@ -149,7 +160,18 @@ class Market extends Contract {
     parentFolder.files.push({ name, hash })
     console.log(parentFolder)
     await ctx.stub.putState(parentHash, Buffer.from(JSON.stringify(parentFolder)));
-    return JSON.stringify(parentFolder)
+    let files = []
+    let folders = []
+    for (let i = 0; i < parentFolder.folders.length-1; i++) {
+      let folderAsBytes = await ctx.stub.getState(parentFolder.folders[i].hash);
+      folders.push(JSON.parse(folderAsBytes.toString()))
+    }
+    for (let j = 0; j < parentFolder.files.length-1; j++) {
+      let fileAsBytes = await ctx.stub.getState(parentFolder.files[j].hash);
+      files.push(JSON.parse(fileAsBytes.toString()))
+    }
+    files.push(file)
+    return JSON.stringify({parentFolder, folders, files})
   }
 
   async updateFile(ctx, hash, cid) {
