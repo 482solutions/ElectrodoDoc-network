@@ -65,16 +65,16 @@ class Market extends Contract {
       await ctx.stub.putState(hash, Buffer.from(JSON.stringify(folder)));
       let files = []
       let folders = []
-      for (let i = 0; i < parentFolder.folders.length-1; i++) {
+      for (let i = 0; i < parentFolder.folders.length - 1; i++) {
         let folderAsBytes = await ctx.stub.getState(parentFolder.folders[i].hash);
         folders.push(JSON.parse(folderAsBytes.toString()))
       }
-      for (let j = 0; j < parentFolder.files.length-1; j++) {
+      for (let j = 0; j < parentFolder.files.length; j++) {
         let fileAsBytes = await ctx.stub.getState(parentFolder.files[j].hash);
         files.push(JSON.parse(fileAsBytes.toString()))
       }
       folders.push(folder)
-      return JSON.stringify({parentFolder, folders, files})
+      return JSON.stringify({ parentFolder, folders, files })
     }
 
     await ctx.stub.putState(hash, Buffer.from(JSON.stringify(folder)));
@@ -162,16 +162,16 @@ class Market extends Contract {
     await ctx.stub.putState(parentHash, Buffer.from(JSON.stringify(parentFolder)));
     let files = []
     let folders = []
-    for (let i = 0; i < parentFolder.folders.length-1; i++) {
+    for (let i = 0; i < parentFolder.folders.length; i++) {
       let folderAsBytes = await ctx.stub.getState(parentFolder.folders[i].hash);
       folders.push(JSON.parse(folderAsBytes.toString()))
     }
-    for (let j = 0; j < parentFolder.files.length-1; j++) {
+    for (let j = 0; j < parentFolder.files.length - 1; j++) {
       let fileAsBytes = await ctx.stub.getState(parentFolder.files[j].hash);
       files.push(JSON.parse(fileAsBytes.toString()))
     }
     files.push(file)
-    return JSON.stringify({parentFolder, folders, files})
+    return JSON.stringify({ parentFolder, folders, files })
   }
 
   async updateFile(ctx, hash, cid) {
@@ -295,7 +295,7 @@ class Market extends Contract {
     return JSON.stringify(object)
   }
 
-  async changePermissions(ctx, hash, login, action, permissions, hashForShare) {
+  async changePermissions(ctx, hash, login, permissions, hashForShare) {
     const identity = new ClientIdentity(ctx.stub);
     const userId = identity.cert.subject.commonName;
     let objectAsBytes = await ctx.stub.getState(hash);
@@ -313,6 +313,23 @@ class Market extends Contract {
       }
       if (!havePermission) {
         return { message: 'You does not have permission' };
+      }
+    }
+    if (object.ownerId === login) {
+      return { message: 'This user is the owner of this file' }
+    }
+    if (permissions === 'read'){
+      for (let i = 0; i < object.readUsers.length; i++) {
+        if (object.readUsers[i] === login) {
+          return { message: 'This user is the viewer of this file' }
+        }
+      }
+    }
+    if(permissions === 'write') {
+      for (let i = 0; i < object.writeUsers.length; i++) {
+        if (object.writeUsers[i] === login) {
+          return { message: 'This user is the editor of this file' }
+        }
       }
     }
     if (hashForShare) {
@@ -334,40 +351,20 @@ class Market extends Contract {
       }
       await ctx.stub.putState(hashForShare, Buffer.from(JSON.stringify(folderForShare)));
     }
-    if (action === 'allow') {
-      if (permissions === 'read') {
+    if (permissions === 'read') {
+      object.readUsers.push(login)
+    }
+    if (permissions === 'write') {
+      if (object.readUsers.indexOf(login) === -1){
         object.readUsers.push(login)
       }
-      if (permissions === 'write') {
-        object.readUsers.push(login)
-        object.writeUsers.push(login)
-      }
+      object.writeUsers.push(login)
     }
-    if (action === 'disallow') {
-      if (permissions === 'read') {
-        const indexRead = object.readUsers.indexOf(login);
-        if (indexRead > -1) {
-          object.readUsers.splice(indexRead, 1);
-        }
-        const indexWrite = object.writeUsers.indexOf(login);
-        if (indexWrite > -1) {
-          object.writeUsers.splice(indexWrite, 1);
-        }
-      }
-      if (permissions === 'write') {
-        const indexWrite = object.writeUsers.indexOf(login);
-        if (indexWrite > -1) {
-          object.writeUsers.splice(indexWrite, 1);
-        }
-      }
-    }
-
     if (object.files || object.folders) {
       for (let i = 0; i < object.files.length; i++) {
         let response = await this.changePermissions(ctx,
           object.files[i].hash,
           login,
-          action,
           permissions,
           null)
         console.log(response)
@@ -376,7 +373,85 @@ class Market extends Contract {
         let response = await this.changePermissions(ctx,
           object.folders[j].hash,
           login,
-          action,
+          permissions,
+          null)
+        console.log(response)
+      }
+    }
+    await ctx.stub.putState(hash, Buffer.from(JSON.stringify(object)));
+    return JSON.stringify(object)
+  }
+
+
+  async revokePermissions(ctx, hash, login, permissions, hashForShare) {
+    const identity = new ClientIdentity(ctx.stub);
+    const userId = identity.cert.subject.commonName;
+    let objectAsBytes = await ctx.stub.getState(hash);
+    if (!objectAsBytes || objectAsBytes.toString().length <= 0) {
+      return { message: 'File with this hash does not exist' };
+    }
+    let object = JSON.parse(objectAsBytes.toString());
+    if (object.ownerId !== userId) {
+      let havePermission = false
+      for (let i = 0; i < object.writeUsers.length; i++) {
+        if (object.writeUsers[i] === userId) {
+          havePermission = true
+          break
+        }
+      }
+      if (!havePermission) {
+        return { message: 'You does not have permission' };
+      }
+    }
+
+    if (permissions === 'read') {
+      const indexRead = object.readUsers.indexOf(login);
+      if (indexRead > -1) {
+        object.readUsers.splice(indexRead, 1);
+      }
+      const indexWrite = object.writeUsers.indexOf(login);
+      if (indexWrite > -1) {
+        object.writeUsers.splice(indexWrite, 1);
+      }
+      if (hashForShare) {
+        let folderForShareAsBytes = await ctx.stub.getState(hashForShare);
+        if (!folderForShareAsBytes || folderForShareAsBytes.toString().length <= 0) {
+          return { message: 'Folder for share does not exist' };
+        }
+        let folderForShare = JSON.parse(folderForShareAsBytes.toString());
+        if (object.files || object.folders) {
+          const index = folderForShare.folders.indexOf(hash);
+          if (index > -1) {
+            folderForShare.folders.splice(index, 1);
+          }
+        } else if (object.versions) {
+          const index = folderForShare.files.indexOf(hash);
+          if (index > -1) {
+            folderForShare.files.splice(index, 1);
+          }
+        }
+        await ctx.stub.putState(hashForShare, Buffer.from(JSON.stringify(folderForShare)));
+      }
+    }
+    if (permissions === 'write') {
+      const indexWrite = object.writeUsers.indexOf(login);
+      if (indexWrite > -1) {
+        object.writeUsers.splice(indexWrite, 1);
+      }
+    }
+    if (object.files || object.folders) {
+      for (let i = 0; i < object.files.length; i++) {
+        let response = await this.revokePermissions(ctx,
+          object.files[i].hash,
+          login,
+          permissions,
+          null)
+        console.log(response)
+      }
+      for (let j = 0; j < object.folders.length; j++) {
+        let response = await this.revokePermissions(ctx,
+          object.folders[j].hash,
+          login,
           permissions,
           null)
         console.log(response)
