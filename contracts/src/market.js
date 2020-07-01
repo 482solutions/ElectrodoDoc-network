@@ -112,6 +112,16 @@ class Market extends Contract {
       let fileAsBytes = await ctx.stub.getState(folder.files[j].hash);
       files.push(JSON.parse(fileAsBytes.toString()))
     }
+    if(folder.sharedFiles || folder.sharedFolders){
+      for (let i = 0; i < folder.sharedFolders.length; i++) {
+        let folderAsBytes = await ctx.stub.getState(folder.sharedFolders[i].hash);
+        folders.push(JSON.parse(folderAsBytes.toString()))
+      }
+      for (let j = 0; j < folder.sharedFiles.length; j++) {
+        let fileAsBytes = await ctx.stub.getState(folder.sharedFiles[j].hash);
+        files.push(JSON.parse(fileAsBytes.toString()))
+      }
+    }
 
     return { folder, folders, files };
   }
