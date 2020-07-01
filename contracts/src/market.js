@@ -225,7 +225,6 @@ class Market extends Contract {
     return file;
   }
 
-
   async changeOwnership(ctx, hash, newOwner, hashThatShared, hashForShare) {
     const identity = new ClientIdentity(ctx.stub);
     const userId = identity.cert.subject.commonName;
@@ -318,17 +317,17 @@ class Market extends Contract {
     if (object.ownerId === login) {
       return { message: 'This user is the owner of this file' }
     }
-    if (permissions === 'read'){
-      for (let i = 0; i < object.readUsers.length; i++) {
-        if (object.readUsers[i] === login) {
-          return { message: 'This user is the viewer of this file' }
-        }
-      }
-    }
     if(permissions === 'write') {
       for (let i = 0; i < object.writeUsers.length; i++) {
         if (object.writeUsers[i] === login) {
           return { message: 'This user is the editor of this file' }
+        }
+      }
+    }
+    if (permissions === 'read'){
+      for (let i = 0; i < object.readUsers.length; i++) {
+        if (object.readUsers[i] === login) {
+          return { message: 'This user is the viewer of this file' }
         }
       }
     }
@@ -382,7 +381,6 @@ class Market extends Contract {
     return JSON.stringify(object)
   }
 
-
   async revokePermissions(ctx, hash, login, permissions, hashForShare) {
     const identity = new ClientIdentity(ctx.stub);
     const userId = identity.cert.subject.commonName;
@@ -408,6 +406,8 @@ class Market extends Contract {
       const indexRead = object.readUsers.indexOf(login);
       if (indexRead > -1) {
         object.readUsers.splice(indexRead, 1);
+      }else {
+        return { message: 'User does not have such permissions' };
       }
       const indexWrite = object.writeUsers.indexOf(login);
       if (indexWrite > -1) {
@@ -437,6 +437,8 @@ class Market extends Contract {
       const indexWrite = object.writeUsers.indexOf(login);
       if (indexWrite > -1) {
         object.writeUsers.splice(indexWrite, 1);
+      }else {
+        return { message: 'User does not have such permissions' };
       }
     }
     if (object.files || object.folders) {
@@ -459,6 +461,37 @@ class Market extends Contract {
     }
     await ctx.stub.putState(hash, Buffer.from(JSON.stringify(object)));
     return JSON.stringify(object)
+  }
+
+  async getFolderTree(ctx, hash) {
+    const identity = new ClientIdentity(ctx.stub);
+    const userId = identity.cert.subject.commonName;
+
+    let folderAsBytes = await ctx.stub.getState(hash);
+    if (!folderAsBytes || folderAsBytes.toString().length <= 0) {
+      throw new Error('Folder with this hash does not exist');
+    }
+    const folder = JSON.parse(folderAsBytes.toString())
+    if (folder.ownerId !== userId) {
+      let havePermission = false
+      for (let i = 0; i < folder.readUsers.length; i++) {
+        if (folder.readUsers[i] === userId) {
+          havePermission = true
+          break
+        }
+      }
+      if (!havePermission) {
+        return { message: 'You does not have permission' };
+      }
+    }
+    const name = folder.folderName
+    const fHash = folder.folderHash
+    let folders = []
+    for (let i = 0; i < folder.folders.length; i++) {
+     let child = await this.getFolderTree(ctx, folder.folders[i].hash);
+     folders.push(child)
+    }
+    return {name, hash: fHash, folders};
   }
 }
 
