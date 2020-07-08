@@ -27,7 +27,8 @@ class Market extends Contract {
       sharedFolders: [],
       readUsers: [],
       writeUsers: [],
-      ownerId: userId
+      ownerId: userId,
+      sender: identity.cert.subject
     };
 
     if (parentHash !== 'root') {
@@ -39,7 +40,8 @@ class Market extends Contract {
         folders: [],
         readUsers: [],
         writeUsers: [],
-        ownerId: userId
+        ownerId: userId,
+        sender: identity.cert.subject
       };
       const parentFolderAsBytes = await ctx.stub.getState(parentHash);
       const parentFolder = JSON.parse(parentFolderAsBytes.toString());
@@ -61,6 +63,7 @@ class Market extends Contract {
         }
       }
       parentFolder.folders.push({ name, hash })
+      parentFolder.sender = identity.cert.subject
       await ctx.stub.putState(parentHash, Buffer.from(JSON.stringify(parentFolder)));
       await ctx.stub.putState(hash, Buffer.from(JSON.stringify(folder)));
       let files = []
@@ -122,7 +125,8 @@ class Market extends Contract {
         files.push(JSON.parse(fileAsBytes.toString()))
       }
     }
-
+    folder.sender = identity.cert.subject
+    await ctx.stub.putState(hash, Buffer.from(JSON.stringify(folder)));
     return { folder, folders, files };
   }
 
@@ -160,7 +164,8 @@ class Market extends Contract {
       versions: [],
       readUsers: [],
       writeUsers: [],
-      ownerId: userId
+      ownerId: userId,
+      sender: identity.cert.subject
     };
     const version = {
       cid, time: Math.floor(new Date() / 1000), user: userId
@@ -168,7 +173,7 @@ class Market extends Contract {
     file.versions.push(version);
     await ctx.stub.putState(hash, Buffer.from(JSON.stringify(file)));
     parentFolder.files.push({ name, hash })
-    console.log(parentFolder)
+    parentFolder.sender = identity.cert.subject
     await ctx.stub.putState(parentHash, Buffer.from(JSON.stringify(parentFolder)));
     let files = []
     let folders = []
@@ -208,6 +213,7 @@ class Market extends Contract {
       cid, time: Math.floor(new Date() / 1000), user: userId
     };
     file.versions.push(version)
+    file.sender = identity.cert.subject
     await ctx.stub.putState(hash, Buffer.from(JSON.stringify(file)));
     return JSON.stringify(file)
   }
@@ -232,6 +238,8 @@ class Market extends Contract {
         return { message: 'You does not have permission: ' };
       }
     }
+    file.sender = identity.cert.subject
+    await ctx.stub.putState(hash, Buffer.from(JSON.stringify(file)));
     return file;
   }
 
@@ -287,6 +295,8 @@ class Market extends Contract {
           1);
         folderThatShared.sharedFiles.push({ name: object.fileName, hash: object.fileHash })
       }
+      folderForShare.sender = identity.cert.subject
+      folderThatShared.sender = identity.cert.subject
       await ctx.stub.putState(hashThatShared, Buffer.from(JSON.stringify(folderThatShared)));
       await ctx.stub.putState(hashForShare, Buffer.from(JSON.stringify(folderForShare)));
     }
@@ -300,6 +310,7 @@ class Market extends Contract {
         console.log(response)
       }
     }
+    object.sender = identity.cert.subject
     await ctx.stub.putState(hash, Buffer.from(JSON.stringify(object)));
     return JSON.stringify(object)
   }
@@ -358,6 +369,7 @@ class Market extends Contract {
 
         folderForShare.sharedFiles.push({ name: object.fileName, hash: object.fileHash })
       }
+      folderForShare.sender = identity.cert.subject
       await ctx.stub.putState(hashForShare, Buffer.from(JSON.stringify(folderForShare)));
     }
     if (permissions === 'read') {
@@ -387,6 +399,7 @@ class Market extends Contract {
         console.log(response)
       }
     }
+    object.sender = identity.cert.subject
     await ctx.stub.putState(hash, Buffer.from(JSON.stringify(object)));
     return JSON.stringify(object)
   }
@@ -440,6 +453,7 @@ class Market extends Contract {
             folderForShare.files.splice(index, 1);
           }
         }
+        folderForShare.sender = identity.cert.subject
         await ctx.stub.putState(hashForShare, Buffer.from(JSON.stringify(folderForShare)));
       }
     }
@@ -469,6 +483,7 @@ class Market extends Contract {
         console.log(response)
       }
     }
+    object.sender = identity.cert.subject
     await ctx.stub.putState(hash, Buffer.from(JSON.stringify(object)));
     return JSON.stringify(object)
   }
@@ -501,6 +516,8 @@ class Market extends Contract {
      let child = await this.getFolderTree(ctx, folder.folders[i].hash);
      folders.push(child)
     }
+    folder.sender = identity.cert.subject
+    await ctx.stub.putState(hash, Buffer.from(JSON.stringify(folder)));
     return {name, hash: fHash, folders};
   }
 }
