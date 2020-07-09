@@ -54,7 +54,7 @@ class Market extends Contract {
           }
         }
         if (!havePermission) {
-          return { message: 'User does not have permission: ' };
+          return { message: 'You does not have permission: ' };
         }
       }
       for (let i = 0; i < parentFolder.folders.length; i++) {
@@ -102,7 +102,7 @@ class Market extends Contract {
         }
       }
       if (!havePermission) {
-        return { message: 'User does not have permission' };
+        return { message: 'You does not have permission' };
       }
     }
     let files = []
@@ -115,7 +115,7 @@ class Market extends Contract {
       let fileAsBytes = await ctx.stub.getState(folder.files[j].hash);
       files.push(JSON.parse(fileAsBytes.toString()))
     }
-    if(folder.sharedFiles || folder.sharedFolders){
+    if (folder.sharedFiles || folder.sharedFolders) {
       for (let i = 0; i < folder.sharedFolders.length; i++) {
         let folderAsBytes = await ctx.stub.getState(folder.sharedFolders[i].hash);
         folders.push(JSON.parse(folderAsBytes.toString()))
@@ -147,7 +147,7 @@ class Market extends Contract {
         }
       }
       if (!havePermission) {
-        return { message: 'User does not have permission: ' };
+        return { message: 'You does not have permission: ' };
       }
     }
     for (let i = 0; i < parentFolder.files.length; i++) {
@@ -206,7 +206,7 @@ class Market extends Contract {
         }
       }
       if (!havePermission) {
-        return { message: 'User does not have permission: ' };
+        return { message: 'You does not have permission: ' };
       }
     }
     const version = {
@@ -235,7 +235,7 @@ class Market extends Contract {
         }
       }
       if (!havePermission) {
-        return { message: 'User does not have permission: ' };
+        return { message: 'You does not have permission: ' };
       }
     }
     file.sender = identity.cert.subject
@@ -243,7 +243,7 @@ class Market extends Contract {
     return file;
   }
 
-  async changeOwnership(ctx, hash, newOwner,rootThatShared, hashForShare) {
+  async changeOwnership(ctx, hash, newOwner, rootThatShared, hashForShare) {
     const identity = new ClientIdentity(ctx.stub);
     const userId = identity.cert.subject.commonName;
     let objectAsBytes = await ctx.stub.getState(hash);
@@ -252,7 +252,7 @@ class Market extends Contract {
     }
     let object = JSON.parse(objectAsBytes.toString());
     if (object.ownerId !== userId) {
-      return { message: 'User does not have permission' };
+      return { message: 'You does not have permission' };
     }
     if (object.ownerId === newOwner) {
       return { message: 'This user is the owner of this file' };
@@ -278,7 +278,6 @@ class Market extends Contract {
         return { message: 'Folder that shared does not exist' };
       }
       let folderRootThatShared = JSON.parse(folderRootAsBytes.toString());
-
       if (object.files || object.folders) {
         for (let i = 0; i < folderForShare.folders.length; i++) {
           if (folderForShare.folders[i].hash === hash) {
@@ -287,8 +286,19 @@ class Market extends Contract {
         }
         folderForShare.folders.push({ name: object.folderName, hash: object.folderHash })
         folderThatShared.folders.splice(folderThatShared.folders.findIndex(v => v.hash === object.folderHash && v.name === object.folderName),
-          1)
-        folderRootThatShared.sharedFolders.push({ name: object.folderName, hash: object.folderHash })
+          1);
+
+        if (hashThatShared !== rootThatShared) {
+          folderRootThatShared.sharedFolders.push({
+            name: object.folderName,
+            hash: object.folderHash
+          })
+          folderRootThatShared.sender = identity.cert.subject
+          await ctx.stub.putState(rootThatShared,
+            Buffer.from(JSON.stringify(folderRootThatShared)));
+        } else {
+          folderThatShared.sharedFolders.push({ name: object.folderName, hash: object.folderHash })
+        }
       } else if (object.versions) {
         for (let i = 0; i < folderForShare.files.length; i++) {
           if (folderForShare.files[i].hash === hash) {
@@ -298,14 +308,21 @@ class Market extends Contract {
         folderForShare.files.push({ name: object.fileName, hash: object.fileHash })
         folderThatShared.files.splice(folderThatShared.files.findIndex(v => v.hash === object.fileHash && v.name === object.fileName),
           1);
-        folderRootThatShared.sharedFiles.push({ name: object.fileName, hash: object.fileHash })
+
+        if (hashThatShared !== rootThatShared) {
+
+          folderRootThatShared.sender = identity.cert.subject
+          await ctx.stub.putState(rootThatShared,
+            Buffer.from(JSON.stringify(folderRootThatShared)));
+        } else {
+          folderThatShared.sharedFiles.push({ name: object.fileName, hash: object.fileHash })
+        }
+
       }
       folderForShare.sender = identity.cert.subject
       folderThatShared.sender = identity.cert.subject
-      folderRootThatShared.sender = identity.cert.subject
       await ctx.stub.putState(hashThatShared, Buffer.from(JSON.stringify(folderThatShared)));
       await ctx.stub.putState(hashForShare, Buffer.from(JSON.stringify(folderForShare)));
-      await ctx.stub.putState(rootThatShared, Buffer.from(JSON.stringify(folderRootThatShared)));
     }
     if (object.files || object.folders) {
       for (let i = 0; i < object.files.length; i++) {
@@ -339,20 +356,20 @@ class Market extends Contract {
         }
       }
       if (!havePermission) {
-        return { message: 'User does not have permission' };
+        return { message: 'You does not have permission' };
       }
     }
     if (object.ownerId === login) {
       return { message: 'This user is the owner of this file' }
     }
-    if(permissions === 'write') {
+    if (permissions === 'write') {
       for (let i = 0; i < object.writeUsers.length; i++) {
         if (object.writeUsers[i] === login) {
           return { message: 'This user is the editor of this file' }
         }
       }
     }
-    if (permissions === 'read'){
+    if (permissions === 'read') {
       for (let i = 0; i < object.readUsers.length; i++) {
         if (object.readUsers[i] === login) {
           return { message: 'This user is the viewer of this file' }
@@ -383,7 +400,7 @@ class Market extends Contract {
       object.readUsers.push(login)
     }
     if (permissions === 'write') {
-      if (object.readUsers.indexOf(login) === -1){
+      if (object.readUsers.indexOf(login) === -1) {
         object.readUsers.push(login)
       }
       object.writeUsers.push(login)
@@ -428,7 +445,7 @@ class Market extends Contract {
         }
       }
       if (!havePermission) {
-        return { message: 'User does not have permission' };
+        return { message: 'You does not have permission' };
       }
     }
 
@@ -436,7 +453,7 @@ class Market extends Contract {
       const indexRead = object.readUsers.indexOf(login);
       if (indexRead > -1) {
         object.readUsers.splice(indexRead, 1);
-      }else {
+      } else {
         return { message: 'User does not have such permissions' };
       }
       const indexWrite = object.writeUsers.indexOf(login);
@@ -450,12 +467,18 @@ class Market extends Contract {
         }
         let folderForShare = JSON.parse(folderForShareAsBytes.toString());
         if (object.files || object.folders) {
-          const index = folderForShare.folders.indexOf({ name: object.folderName, hash: object.folderHash });
+          const index = folderForShare.folders.indexOf({
+            name: object.folderName,
+            hash: object.folderHash
+          });
           if (index > -1) {
             folderForShare.folders.splice(index, 1);
           }
         } else if (object.versions) {
-          const index = folderForShare.files.indexOf({ name: object.fileName, hash: object.fileHash });
+          const index = folderForShare.files.indexOf({
+            name: object.fileName,
+            hash: object.fileHash
+          });
           if (index > -1) {
             folderForShare.files.splice(index, 1);
           }
@@ -468,7 +491,7 @@ class Market extends Contract {
       const indexWrite = object.writeUsers.indexOf(login);
       if (indexWrite > -1) {
         object.writeUsers.splice(indexWrite, 1);
-      }else {
+      } else {
         return { message: 'User does not have such permissions' };
       }
     }
@@ -513,19 +536,19 @@ class Market extends Contract {
         }
       }
       if (!havePermission) {
-        return { message: 'User does not have permission' };
+        return { message: 'You does not have permission' };
       }
     }
     const name = folder.folderName
     const fHash = folder.folderHash
     let folders = []
     for (let i = 0; i < folder.folders.length; i++) {
-     let child = await this.getFolderTree(ctx, folder.folders[i].hash);
-     folders.push(child)
+      let child = await this.getFolderTree(ctx, folder.folders[i].hash);
+      folders.push(child)
     }
     folder.sender = identity.cert.subject
     await ctx.stub.putState(hash, Buffer.from(JSON.stringify(folder)));
-    return {name, hash: fHash, folders};
+    return { name, hash: fHash, folders };
   }
 }
 
