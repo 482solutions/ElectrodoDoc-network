@@ -54,7 +54,7 @@ class Market extends Contract {
           }
         }
         if (!havePermission) {
-          return { message: 'You does not have permission: ' };
+          return { message: 'User does not have permission: ' };
         }
       }
       for (let i = 0; i < parentFolder.folders.length; i++) {
@@ -102,7 +102,7 @@ class Market extends Contract {
         }
       }
       if (!havePermission) {
-        return { message: 'You does not have permission' };
+        return { message: 'User does not have permission' };
       }
     }
     let files = []
@@ -147,7 +147,7 @@ class Market extends Contract {
         }
       }
       if (!havePermission) {
-        return { message: 'You does not have permission: ' };
+        return { message: 'User does not have permission: ' };
       }
     }
     for (let i = 0; i < parentFolder.files.length; i++) {
@@ -206,7 +206,7 @@ class Market extends Contract {
         }
       }
       if (!havePermission) {
-        return { message: 'You does not have permission: ' };
+        return { message: 'User does not have permission: ' };
       }
     }
     const version = {
@@ -235,7 +235,7 @@ class Market extends Contract {
         }
       }
       if (!havePermission) {
-        return { message: 'You does not have permission: ' };
+        return { message: 'User does not have permission: ' };
       }
     }
     file.sender = identity.cert.subject
@@ -252,7 +252,7 @@ class Market extends Contract {
     }
     let object = JSON.parse(objectAsBytes.toString());
     if (object.ownerId !== userId) {
-      return { message: 'You does not have permission' };
+      return { message: 'User does not have permission' };
     }
     if (object.ownerId === newOwner) {
       return { message: 'This user is the owner of this file' };
@@ -339,7 +339,7 @@ class Market extends Contract {
         }
       }
       if (!havePermission) {
-        return { message: 'You does not have permission' };
+        return { message: 'User does not have permission' };
       }
     }
     if (object.ownerId === login) {
@@ -428,7 +428,7 @@ class Market extends Contract {
         }
       }
       if (!havePermission) {
-        return { message: 'You does not have permission' };
+        return { message: 'User does not have permission' };
       }
     }
 
@@ -513,7 +513,7 @@ class Market extends Contract {
         }
       }
       if (!havePermission) {
-        return { message: 'You does not have permission' };
+        return { message: 'User does not have permission' };
       }
     }
     const name = folder.folderName

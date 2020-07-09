@@ -169,7 +169,7 @@ describe('Test chaincode\n', () => {
     console.log(response)
     expect(response.status).to.eq(200);
     assert(
-      response.payload.message === 'You does not have permission: ',
+      response.payload.message === 'User does not have permission: ',
       "file name does not match"
     );
   });
@@ -180,7 +180,7 @@ describe('Test chaincode\n', () => {
     console.log(response.payload)
     expect(response.status).to.eq(200);
     assert(
-      response.payload.message === 'You does not have permission: ',
+      response.payload.message === 'User does not have permission: ',
       "file name does not match"
     );
   });
