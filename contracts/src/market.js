@@ -243,7 +243,7 @@ class Market extends Contract {
     return file;
   }
 
-  async changeOwnership(ctx, hash, newOwner, hashThatShared, hashForShare) {
+  async changeOwnership(ctx, hash, newOwner,rootThatShared, hashForShare) {
     const identity = new ClientIdentity(ctx.stub);
     const userId = identity.cert.subject.commonName;
     let objectAsBytes = await ctx.stub.getState(hash);
@@ -260,6 +260,7 @@ class Market extends Contract {
     object.ownerId = newOwner
     object.readUsers.push(userId)
     object.writeUsers.push(userId)
+    const hashThatShared = object.parentFolderHash
 
     if (hashThatShared && hashForShare) {
       let folderForShareAsBytes = await ctx.stub.getState(hashForShare);
@@ -272,7 +273,11 @@ class Market extends Contract {
       }
       let folderThatShared = JSON.parse(folderThatSharedAsBytes.toString());
       let folderForShare = JSON.parse(folderForShareAsBytes.toString());
-
+      let folderRootAsBytes = await ctx.stub.getState(rootThatShared);
+      if (!folderRootAsBytes || folderRootAsBytes.toString().length <= 0) {
+        return { message: 'Folder that shared does not exist' };
+      }
+      let folderRootThatShared = JSON.parse(folderRootAsBytes.toString());
 
       if (object.files || object.folders) {
         for (let i = 0; i < folderForShare.folders.length; i++) {
@@ -283,7 +288,7 @@ class Market extends Contract {
         folderForShare.folders.push({ name: object.folderName, hash: object.folderHash })
         folderThatShared.folders.splice(folderThatShared.folders.findIndex(v => v.hash === object.folderHash && v.name === object.folderName),
           1)
-        folderThatShared.sharedFolders.push({ name: object.folderName, hash: object.folderHash })
+        folderRootThatShared.sharedFolders.push({ name: object.folderName, hash: object.folderHash })
       } else if (object.versions) {
         for (let i = 0; i < folderForShare.files.length; i++) {
           if (folderForShare.files[i].hash === hash) {
@@ -293,12 +298,14 @@ class Market extends Contract {
         folderForShare.files.push({ name: object.fileName, hash: object.fileHash })
         folderThatShared.files.splice(folderThatShared.files.findIndex(v => v.hash === object.fileHash && v.name === object.fileName),
           1);
-        folderThatShared.sharedFiles.push({ name: object.fileName, hash: object.fileHash })
+        folderRootThatShared.sharedFiles.push({ name: object.fileName, hash: object.fileHash })
       }
       folderForShare.sender = identity.cert.subject
       folderThatShared.sender = identity.cert.subject
+      folderRootThatShared.sender = identity.cert.subject
       await ctx.stub.putState(hashThatShared, Buffer.from(JSON.stringify(folderThatShared)));
       await ctx.stub.putState(hashForShare, Buffer.from(JSON.stringify(folderForShare)));
+      await ctx.stub.putState(rootThatShared, Buffer.from(JSON.stringify(folderRootThatShared)));
     }
     if (object.files || object.folders) {
       for (let i = 0; i < object.files.length; i++) {
@@ -443,12 +450,12 @@ class Market extends Contract {
         }
         let folderForShare = JSON.parse(folderForShareAsBytes.toString());
         if (object.files || object.folders) {
-          const index = folderForShare.folders.indexOf(hash);
+          const index = folderForShare.folders.indexOf({ name: object.folderName, hash: object.folderHash });
           if (index > -1) {
             folderForShare.folders.splice(index, 1);
           }
         } else if (object.versions) {
-          const index = folderForShare.files.indexOf(hash);
+          const index = folderForShare.files.indexOf({ name: object.fileName, hash: object.fileHash });
           if (index > -1) {
             folderForShare.files.splice(index, 1);
           }
