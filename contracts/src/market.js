@@ -62,6 +62,11 @@ class Market extends Contract {
           return { message: 'Folder already exist' };
         }
       }
+      if (parentFolder.ownerId !== userId){
+        folder.ownerId = parentFolder.ownerId
+        folder.readUsers.push(userId)
+        folder.writeUsers.push(userId)
+      }
       parentFolder.folders.push({ name, hash })
       parentFolder.sender = identity.cert.subject
       await ctx.stub.putState(parentHash, Buffer.from(JSON.stringify(parentFolder)));
@@ -170,6 +175,11 @@ class Market extends Contract {
     const version = {
       cid, time: Math.floor(new Date() / 1000), user: userId
     };
+    if (parentFolder.ownerId !== userId){
+      file.ownerId = parentFolder.ownerId
+      file.readUsers.push(userId)
+      file.writeUsers.push(userId)
+    }
     file.versions.push(version);
     await ctx.stub.putState(hash, Buffer.from(JSON.stringify(file)));
     parentFolder.files.push({ name, hash })
@@ -308,7 +318,6 @@ class Market extends Contract {
         folderForShare.files.push({ name: object.fileName, hash: object.fileHash })
         folderThatShared.files.splice(folderThatShared.files.findIndex(v => v.hash === object.fileHash && v.name === object.fileName),
           1);
-
         if (hashThatShared !== rootThatShared) {
 
           folderRootThatShared.sender = identity.cert.subject
@@ -383,11 +392,12 @@ class Market extends Contract {
       }
       let folderForShare = JSON.parse(folderForShareAsBytes.toString());
       if (object.files || object.folders) {
-        for (let i = 0; i < folderForShare.folders.length; i++) {
-          if (folderForShare.folders[i].hash === hash) {
-            return { message: 'Folder for share already include this file' };
-          }
+
+        if (folderForShare.folders.findIndex(v => v.hash === object.folderHash && v.name === object.folderName) > -1
+          && object.writeUsers.indexOf(login) > -1) {
+          return { message: 'Folder for share already include this file' };
         }
+
         folderForShare.sharedFolders.push({ name: object.folderName, hash: object.folderHash })
       } else if (object.versions) {
 
