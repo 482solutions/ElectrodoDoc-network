@@ -62,11 +62,10 @@ class Market extends Contract {
           return { message: 'Folder already exist' };
         }
       }
-      if (parentFolder.ownerId !== userId){
-        folder.ownerId = parentFolder.ownerId
-        folder.readUsers.push(userId)
-        folder.writeUsers.push(userId)
-      }
+
+      folder.ownerId = parentFolder.ownerId
+      folder.readUsers = parentFolder.readUsers
+      folder.writeUsers = parentFolder.writeUsers
       parentFolder.folders.push({ name, hash })
       parentFolder.sender = identity.cert.subject
       await ctx.stub.putState(parentHash, Buffer.from(JSON.stringify(parentFolder)));
@@ -175,11 +174,9 @@ class Market extends Contract {
     const version = {
       cid, time: Math.floor(new Date() / 1000), user: userId
     };
-    if (parentFolder.ownerId !== userId){
-      file.ownerId = parentFolder.ownerId
-      file.readUsers.push(userId)
-      file.writeUsers.push(userId)
-    }
+    file.ownerId = parentFolder.ownerId
+    file.readUsers = parentFolder.readUsers
+    file.writeUsers = parentFolder.writeUsers
     file.versions.push(version);
     await ctx.stub.putState(hash, Buffer.from(JSON.stringify(file)));
     parentFolder.files.push({ name, hash })
