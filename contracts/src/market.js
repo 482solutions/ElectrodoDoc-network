@@ -476,10 +476,10 @@ class Market extends Contract {
         }
         let folderForShare = JSON.parse(folderForShareAsBytes.toString());
         if (object.files || object.folders) {
-          folderForShare.folders.splice(folderForShare.folders.findIndex(v => v.hash === object.folderHash && v.name === object.folderName),
+          folderForShare.sharedFiles.splice(folderForShare.sharedFolders.findIndex(v => v.hash === object.folderHash && v.name === object.folderName),
             1)
         } else if (object.versions) {
-          folderForShare.files.splice(folderForShare.files.findIndex(v => v.hash === object.fileHash && v.name === object.fileName),
+          folderForShare.sharedFiles.splice(folderForShare.sharedFiles.findIndex(v => v.hash === object.fileHash && v.name === object.fileName),
             1)
         }
         folderForShare.sender = identity.cert.subject
