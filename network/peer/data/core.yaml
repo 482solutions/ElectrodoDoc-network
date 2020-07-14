@@ -480,7 +480,7 @@ chaincode:
         name:
 
     # Generic builder environment, suitable for most chaincode types
-    builder: $(DOCKER_NS)/fabric-ccenv:2.1
+    builder: $(DOCKER_NS)/fabric-ccenv:1.4
 
     # Enables/disables force pulling of the base docker images (listed below)
     # during user chaincode instantiation.
