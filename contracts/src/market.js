@@ -394,11 +394,13 @@ class Market extends Contract {
           && object.writeUsers.indexOf(login) > -1) {
           return { message: 'Folder for share already include this file' };
         }
-
-        folderForShare.sharedFolders.push({ name: object.folderName, hash: object.folderHash })
+        if (object.readUsers.indexOf(login) === -1 && object.writeUsers.indexOf(login)=== -1) {
+          folderForShare.sharedFolders.push({ name: object.folderName, hash: object.folderHash })
+        }
       } else if (object.versions) {
-
-        folderForShare.sharedFiles.push({ name: object.fileName, hash: object.fileHash })
+        if (object.readUsers.indexOf(login) === -1 && object.writeUsers.indexOf(login)=== -1) {
+          folderForShare.sharedFiles.push({ name: object.fileName, hash: object.fileHash })
+        }
       }
       folderForShare.sender = identity.cert.subject
       await ctx.stub.putState(hashForShare, Buffer.from(JSON.stringify(folderForShare)));
@@ -474,21 +476,11 @@ class Market extends Contract {
         }
         let folderForShare = JSON.parse(folderForShareAsBytes.toString());
         if (object.files || object.folders) {
-          const index = folderForShare.folders.indexOf({
-            name: object.folderName,
-            hash: object.folderHash
-          });
-          if (index > -1) {
-            folderForShare.folders.splice(index, 1);
-          }
+          folderForShare.folders.splice(folderForShare.folders.findIndex(v => v.hash === object.folderHash && v.name === object.folderName),
+            1)
         } else if (object.versions) {
-          const index = folderForShare.files.indexOf({
-            name: object.fileName,
-            hash: object.fileHash
-          });
-          if (index > -1) {
-            folderForShare.files.splice(index, 1);
-          }
+          folderForShare.files.splice(folderForShare.files.findIndex(v => v.hash === object.fileHash && v.name === object.fileName),
+            1)
         }
         folderForShare.sender = identity.cert.subject
         await ctx.stub.putState(hashForShare, Buffer.from(JSON.stringify(folderForShare)));
