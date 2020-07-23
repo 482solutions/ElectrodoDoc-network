@@ -20,7 +20,9 @@ class Chaincode {
         this.getFile = fileSystem.getFile;
         this.changeOwnership = fileSystem.changeOwnership.bind(this)
         this.changePermissions = fileSystem.changePermissions.bind(this)
-
+        this.revokePermissions = fileSystem.revokePermissions.bind(this)
+        this.createVoting = fileSystem.createVoting.bind(this)
+        this.getVoting = fileSystem.getVoting.bind(this)
     }
 
     async Init(stub) {

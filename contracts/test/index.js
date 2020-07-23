@@ -119,24 +119,24 @@ describe('Test chaincode\n', () => {
     expect(response.payload).to.deep.equal(file);
   });
 
-  it('Should be able to change owner of file', async () => {
-    const response = await stub.mockInvoke(
-      'txchangeOwnership1',
-      ['changeOwnership', 'folderhash12345', 'newTestOwner' ]
-    );
-    expect(response.status).to.eq(200);
-    file = JSON.parse(response.payload);
-    console.log('test.changeOwnership: file:', file);
-    assert(
-      file.ownerId === 'newTestOwner',
-      "file name does not match"
-    );
-  });
+  // it('Should be able to change owner of file', async () => {
+  //   const response = await stub.mockInvoke(
+  //     'txchangeOwnership1',
+  //     ['changeOwnership', 'folderhash12345', 'newTestOwner' ]
+  //   );
+  //   expect(response.status).to.eq(200);
+  //   file = JSON.parse(response.payload);
+  //   console.log('test.changeOwnership: file:', file);
+  //   assert(
+  //     file.ownerId === 'newTestOwner',
+  //     "file name does not match"
+  //   );
+  // });
 
   it('Should be able to add permissions of folder', async () => {
     const response = await stub.mockInvoke(
       'txchangePermissions1',
-      ['changePermissions', 'folderhash12345', 'newSharedUser', 'allow', 'write']
+      ['changePermissions', 'folderhash12345', 'votingHash', 'newSharedUser', 'allow', 'write']
     );
     expect(response.status).to.eq(200);
     file = JSON.parse(response.payload);
@@ -182,6 +182,22 @@ describe('Test chaincode\n', () => {
     assert(
       response.payload.message === 'User does not have permission: ',
       "file name does not match"
+    );
+  });
+  it('Should be able to add voting', async () => {
+    const response = await stub.mockInvoke(
+      'txcreateVoting',
+      ['createVoting', 'filehash12345', '4323134538333', '[Yes, No, Derby]', '[]', 'gfhfdfgdhfjgfdfghjhgfdsgdghgf', 'folderhash1234567' ]
+    );
+    folder = response.payload;
+    console.log('test.addFolder: folder:', folder);
+    assert(
+      folder.folderName === 'folderTest1',
+      "folder name does not match"
+    );
+    assert(
+      folder.folderHash === 'folderhash12345',
+      "folder hash does not match"
     );
   });
 });

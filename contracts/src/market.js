@@ -2,6 +2,7 @@
 
 const { Contract } = require('fabric-contract-api');
 const { ClientIdentity } = require('fabric-shim');
+const { sha256 } = require('sha256');
 
 class Market extends Contract {
 
@@ -168,6 +169,7 @@ class Market extends Contract {
       versions: [],
       readUsers: [],
       writeUsers: [],
+      voting: [],
       ownerId: userId,
       sender: identity.cert.subject
     };
@@ -394,11 +396,11 @@ class Market extends Contract {
           && object.writeUsers.indexOf(login) > -1) {
           return { message: 'Folder for share already include this file' };
         }
-        if (object.readUsers.indexOf(login) === -1 && object.writeUsers.indexOf(login)=== -1) {
+        if (object.readUsers.indexOf(login) === -1 && object.writeUsers.indexOf(login) === -1) {
           folderForShare.sharedFolders.push({ name: object.folderName, hash: object.folderHash })
         }
       } else if (object.versions) {
-        if (object.readUsers.indexOf(login) === -1 && object.writeUsers.indexOf(login)=== -1) {
+        if (object.readUsers.indexOf(login) === -1 && object.writeUsers.indexOf(login) === -1) {
           folderForShare.sharedFiles.push({ name: object.fileName, hash: object.fileHash })
         }
       }
@@ -549,6 +551,115 @@ class Market extends Contract {
     await ctx.stub.putState(hash, Buffer.from(JSON.stringify(folder)));
     return { name, hash: fHash, folders };
   }
+
+  async createVoting(ctx, hash, votingHash, dueDate, variantsString, excludeUsersString, description, rootHash) {
+    const identity = new ClientIdentity(ctx.stub);
+    const userId = identity.cert.subject.commonName;
+    const fileForVotingHash = await ctx.stub.getState(hash);
+    if (!fileForVotingHash || fileForVotingHash.toString().length <= 0) {
+      return { message: 'File with this hash does not exist' };
+    }
+    const fileForVoting = JSON.parse(fileForVotingHash.toString());
+    if (fileForVoting.ownerId !== userId) {
+      return { message: `User does not have permission ${userId}, ${fileForVoting.ownerId}`};
+    }
+    let variants = variantsString
+    let excludeUsers = excludeUsersString
+    let voting = {
+      votingName: fileForVoting.fileName,
+      votingHash,
+      versionTime: fileForVoting.versions[fileForVoting.versions.length - 1].time,
+      dueDate,
+      variants,
+      voters: new Set(),
+      description,
+      status: true,
+      sender: identity.cert.subject
+    };
+    console.log(voting)
+    for (let i = 0; i < fileForVoting.writeUsers.length; i++) {
+      voting.voters.add({ name: fileForVoting.writeUsers[i], vote: null })
+    }
+    for (let i = 0; i < fileForVoting.readUsers.length; i++) {
+      voting.voters.add({ name: fileForVoting.readUsers[i], vote: null })
+    }
+    for (let i = 0; i < excludeUsers.length; i++) {
+      voting.voters.delete({ name: excludeUsers[i], vote: null })
+    }
+
+    fileForVoting.voting.push(voting.votingHash)
+    fileForVoting.sender = identity.cert.subject
+    await ctx.stub.putState(hash, Buffer.from(JSON.stringify(fileForVoting)));
+    await ctx.stub.putState(votingHash, Buffer.from(JSON.stringify(voting)));
+    const allVoting = JSON.parse(await this.getVoting(ctx, rootHash))
+    allVoting.push(voting)
+    return allVoting
+
+  }
+
+  async getVoting(ctx, hash) {
+    const identity = new ClientIdentity(ctx.stub);
+    const userId = identity.cert.subject.commonName;
+
+    let folderAsBytes = await ctx.stub.getState(hash);
+    if (!folderAsBytes || folderAsBytes.toString().length <= 0) {
+      throw new Error('Folder with this hash does not exist');
+    }
+    const folder = JSON.parse(folderAsBytes.toString())
+    if (folder.ownerId !== userId) {
+      return { message: 'User does not have permission' };
+    }
+    let voting = []
+    for (let i = 0; i < folder.files.length; i++) {
+      let fileAsBytes = await ctx.stub.getState(folder.files[i].hash);
+      const file = JSON.parse(fileAsBytes.toString())
+      if (file.voting.length > 0) {
+        for (let j = 0; i < file.voting.length; j++) {
+          let votingAsBytes = await ctx.stub.getState(file.voting[j]);
+          let votingIdentity = JSON.parse(votingAsBytes.toString())
+          if (votingIdentity.dueDate > Math.floor(new Date() / 1000)){
+            votingIdentity.status = false
+          }
+          voting.push(votingIdentity)
+        }
+      }
+    }
+    for (let i = 0; i < folder.folders.length; i++) {
+      let child = await this.getVoting(ctx, folder.folders[i].hash);
+      for (let j = 0; i < child.length; j++) {
+        voting.push(child[j])
+      }
+    }
+    if (folder.sharedFolders){
+      for (let i = 0; i < folder.sharedFolders.length; i++) {
+        let child = await this.getVoting(ctx, folder.sharedFolders[i].hash);
+        for (let j = 0; i < child.length; j++) {
+          voting.push(child[j])
+        }
+      }
+    }
+    folder.sender = identity.cert.subject
+    await ctx.stub.putState(hash, Buffer.from(JSON.stringify(folder)));
+    return JSON.stringify(voting)
+  }
+
+  async updateVoting(ctx, hash, variant) {
+    const identity = new ClientIdentity(ctx.stub);
+    const userId = identity.cert.subject.commonName;
+    let votingAsBytes = await ctx.stub.getState(hash);
+    if (!votingAsBytes || votingAsBytes.toString().length <= 0) {
+      return { message: 'Voting with this hash does not exist' };
+    }
+    let voting = JSON.parse(votingAsBytes.toString());
+   if (voting.voters.has({name:userId, vote: null})){
+     voting.voters.delete({name:userId, vote: null})
+     voting.voters.add({name:userId, vote: variant})
+   }
+    voting.sender = identity.cert.subject
+    await ctx.stub.putState(hash, Buffer.from(JSON.stringify(voting)));
+    return JSON.stringify(voting)
+  }
+
 }
 
 module.exports = Market;
