@@ -2,7 +2,6 @@
 
 const { Contract } = require('fabric-contract-api');
 const { ClientIdentity } = require('fabric-shim');
-const { sha256 } = require('sha256');
 
 class Market extends Contract {
 
@@ -552,7 +551,7 @@ class Market extends Contract {
     return { name, hash: fHash, folders };
   }
 
-  async createVoting(ctx, hash, votingHash, dueDate, variantsString, excludeUsersString, description, rootHash) {
+  async createVoting(ctx, hash, votingHash, dueDate, variants, excludeUsers, description, rootHash) {
     const identity = new ClientIdentity(ctx.stub);
     const userId = identity.cert.subject.commonName;
     const fileForVotingHash = await ctx.stub.getState(hash);
@@ -561,30 +560,33 @@ class Market extends Contract {
     }
     const fileForVoting = JSON.parse(fileForVotingHash.toString());
     if (fileForVoting.ownerId !== userId) {
-      return { message: `User does not have permission ${userId}, ${fileForVoting.ownerId}`};
+      return { message: `User does not have permission` };
     }
-    let variants = variantsString
-    let excludeUsers = excludeUsersString
     let voting = {
       votingName: fileForVoting.fileName,
       votingHash,
       versionTime: fileForVoting.versions[fileForVoting.versions.length - 1].time,
       dueDate,
       variants,
-      voters: new Set(),
+      voters: [],
       description,
       status: true,
       sender: identity.cert.subject
     };
-    console.log(voting)
+    if (fileForVoting.writeUsers.length === 0 && fileForVoting.readUsers.length === 0) {
+      return { message: 'You need to share this file with somebody' };
+    }
     for (let i = 0; i < fileForVoting.writeUsers.length; i++) {
-      voting.voters.add({ name: fileForVoting.writeUsers[i], vote: null })
+      voting.voters.push({ name: fileForVoting.writeUsers[i], vote: null })
     }
     for (let i = 0; i < fileForVoting.readUsers.length; i++) {
-      voting.voters.add({ name: fileForVoting.readUsers[i], vote: null })
+      if (voting.voters.findIndex(v => v.name === fileForVoting.readUsers[i]) === -1) {
+        voting.voters.push({ name: fileForVoting.readUsers[i], vote: null })
+      }
     }
     for (let i = 0; i < excludeUsers.length; i++) {
-      voting.voters.delete({ name: excludeUsers[i], vote: null })
+      voting.voters.splice(voting.voters.findIndex(v => v.name === excludeUsers[i] && v.vote === null),
+        1)
     }
 
     fileForVoting.voting.push(voting.votingHash)
@@ -617,7 +619,7 @@ class Market extends Contract {
         for (let j = 0; i < file.voting.length; j++) {
           let votingAsBytes = await ctx.stub.getState(file.voting[j]);
           let votingIdentity = JSON.parse(votingAsBytes.toString())
-          if (votingIdentity.dueDate > Math.floor(new Date() / 1000)){
+          if (votingIdentity.dueDate > Math.floor(new Date() / 1000)) {
             votingIdentity.status = false
           }
           voting.push(votingIdentity)
@@ -630,7 +632,7 @@ class Market extends Contract {
         voting.push(child[j])
       }
     }
-    if (folder.sharedFolders){
+    if (folder.sharedFolders) {
       for (let i = 0; i < folder.sharedFolders.length; i++) {
         let child = await this.getVoting(ctx, folder.sharedFolders[i].hash);
         for (let j = 0; i < child.length; j++) {
@@ -651,10 +653,10 @@ class Market extends Contract {
       return { message: 'Voting with this hash does not exist' };
     }
     let voting = JSON.parse(votingAsBytes.toString());
-   if (voting.voters.has({name:userId, vote: null})){
-     voting.voters.delete({name:userId, vote: null})
-     voting.voters.add({name:userId, vote: variant})
-   }
+    if (voting.voters.has({ name: userId, vote: null })) {
+      voting.voters.delete({ name: userId, vote: null })
+      voting.voters.add({ name: userId, vote: variant })
+    }
     voting.sender = identity.cert.subject
     await ctx.stub.putState(hash, Buffer.from(JSON.stringify(voting)));
     return JSON.stringify(voting)
