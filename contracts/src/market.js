@@ -2,7 +2,6 @@
 
 const { Contract } = require('fabric-contract-api');
 const { ClientIdentity } = require('fabric-shim');
-const { sha256 } = require('sha256');
 
 class Market extends Contract {
 
