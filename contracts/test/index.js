@@ -187,17 +187,9 @@ describe('Test chaincode\n', () => {
   it('Should be able to add voting', async () => {
     const response = await stub.mockInvoke(
       'txcreateVoting',
-      ['createVoting', 'filehash12345', '4323134538333', ["Yes", "No", "Derby"], ["user1", "user2"], 'gfhfdfgdhfjgfdfghjhgfdsgdghgf', 'folderhash1234567' ]
+      ['createVoting', 'filehash12345', '4323134538333','timeisnow', "Yes, No, Derby", "user3, user4", 'gfhfdfgdhfjgfdfghjhgfdsgdghgf', 'folderhash1234567' ]
     );
     folder = response.payload;
-    console.log('test.addFolder: folder:', folder);
-    assert(
-      folder.folderName === 'folderTest1',
-      "folder name does not match"
-    );
-    assert(
-      folder.folderHash === 'folderhash12345',
-      "folder hash does not match"
-    );
+    console.log('voting create results:', folder);
   });
 });

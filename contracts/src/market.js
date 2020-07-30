@@ -584,11 +584,9 @@ class Market extends Contract {
         voting.voters.push({ name: fileForVoting.readUsers[i], vote: null })
       }
     }
-    for (let i = 0; i < excludeUsers.length; i++) {
-      voting.voters.splice(voting.voters.findIndex(v => v.name === excludeUsers[i] && v.vote === null),
-        1)
-    }
-    if (voting.voters.length < 2){
+    let excludedArray = excludeUsers.split(', ')
+    voting.voters = voting.voters.filter(i => !excludedArray.includes(i.name))
+    if (voting.voters.length < 1) {
       return { message: 'You can`t create voting without voters' };
     }
 
