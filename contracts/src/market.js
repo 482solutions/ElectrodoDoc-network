@@ -588,6 +588,9 @@ class Market extends Contract {
       voting.voters.splice(voting.voters.findIndex(v => v.name === excludeUsers[i] && v.vote === null),
         1)
     }
+    if (voting.voters.length < 2){
+      return { message: 'You can`t create voting without voters' };
+    }
 
     fileForVoting.voting.push(voting.votingHash)
     fileForVoting.sender = identity.cert.subject
