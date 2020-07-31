@@ -564,6 +564,7 @@ class Market extends Contract {
     }
     let voting = {
       votingName: fileForVoting.fileName,
+      fileHash: fileForVoting.fileHash,
       votingHash,
       versionTime: fileForVoting.versions[fileForVoting.versions.length - 1].time,
       dueDate,
@@ -576,6 +577,7 @@ class Market extends Contract {
     if (fileForVoting.writeUsers.length === 0 && fileForVoting.readUsers.length === 0) {
       return { message: 'You need to share this file with somebody' };
     }
+    voting.voters.push({ name: fileForVoting.ownerId, vote: null })
     for (let i = 0; i < fileForVoting.writeUsers.length; i++) {
       voting.voters.push({ name: fileForVoting.writeUsers[i], vote: null })
     }
@@ -586,7 +588,7 @@ class Market extends Contract {
     }
     let excludedArray = excludeUsers.split(',')
     voting.voters = voting.voters.filter(i => !excludedArray.includes(i.name))
-    if (voting.voters.length < 1) {
+    if (voting.voters.length < 2) {
       return { message: 'You can`t create voting without voters' };
     }
     fileForVoting.voting.push(voting.votingHash)
@@ -651,15 +653,41 @@ class Market extends Contract {
     const userId = identity.cert.subject.commonName;
     let votingAsBytes = await ctx.stub.getState(hash);
     if (!votingAsBytes || votingAsBytes.toString().length <= 0) {
-      return { message: 'Voting with this hash does not exist' };
+      return
     }
     let voting = JSON.parse(votingAsBytes.toString());
-    if (voting.voters.has({ name: userId, vote: null })) {
-      voting.voters.delete({ name: userId, vote: null })
-      voting.voters.add({ name: userId, vote: variant })
+    let fileAsBytes = await ctx.stub.getState(voting.fileHash);
+    let file = JSON.parse(fileAsBytes.toString());
+    if (file.ownerId !== userId) {
+      let havePermission = false
+      for (let i = 0; i < file.writeUsers.length; i++) {
+        if (file.writeUsers[i] === userId) {
+          havePermission = true
+          break
+        }
+      }
+      for (let i = 0; i < file.readUsers.length; i++) {
+        if (file.readUsers[i] === userId) {
+          havePermission = true
+          break
+        }
+      }
+      if (!havePermission) {
+        return { message: 'User does not have permission' };
+      }
     }
-    voting.sender = identity.cert.subject
-    await ctx.stub.putState(hash, Buffer.from(JSON.stringify(voting)));
+    if(voting.voters){
+      let index = voting.voters.findIndex(v => v.name === userId)
+      if(voting.voters[index].vote !== null){
+        return { message: 'You already vote in this voting' };
+      }
+      if (index > -1) {
+        voting.voters.splice(index)
+        voting.voters.push({ name: userId, vote: variant })
+      }
+      voting.sender = identity.cert.subject
+      await ctx.stub.putState(hash, Buffer.from(JSON.stringify(voting)));
+    }
     return JSON.stringify(voting)
   }
 }

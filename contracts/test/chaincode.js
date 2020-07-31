@@ -23,6 +23,8 @@ class Chaincode {
         this.revokePermissions = fileSystem.revokePermissions.bind(this)
         this.createVoting = fileSystem.createVoting.bind(this)
         this.getVoting = fileSystem.getVoting.bind(this)
+        this.updateVoting = fileSystem.updateVoting.bind(this)
+
     }
 
     async Init(stub) {

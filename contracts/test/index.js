@@ -184,12 +184,14 @@ describe('Test chaincode\n', () => {
   //     "file name does not match"
   //   );
   // });
+  let votingRes
   it('Should be able to add voting', async () => {
     const response = await stub.mockInvoke(
       'txcreateVoting',
       ['createVoting', 'filehash12345', '4323134538333','timeisnow', "Yes,No,Derby", "user3,user4", 'gfhfdfgdhfjgfdfghjhgfdsgdghgf', 'folderhash1234567' ]
     );
     folder = response.payload;
+    votingRes = folder
     console.log('voting create results:', folder);
   });
 
@@ -200,5 +202,14 @@ describe('Test chaincode\n', () => {
     );
    let voting = response.payload;
     console.log('voting get results:', voting);
+  });
+
+  it('Should be able to vote', async () => {
+    const response = await stub.mockInvoke(
+      'txupdateVoting',
+      ['updateVoting', votingRes[0].votingHash, 'Yes' ]
+    );
+   let voting = response.payload;
+    console.log('voting update results:', voting);
   });
 });
