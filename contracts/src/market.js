@@ -656,6 +656,15 @@ class Market extends Contract {
       return
     }
     let voting = JSON.parse(votingAsBytes.toString());
+    let checkVariant = false
+    for(let i = 0; i<voting.variants.length; i++){
+      if (variant === voting.variants[i]){
+        checkVariant = true
+      }
+    }
+    if (!checkVariant){
+      return { message: 'Variant does not exist' };
+    }
     let fileAsBytes = await ctx.stub.getState(voting.fileHash);
     let file = JSON.parse(fileAsBytes.toString());
     if (file.ownerId !== userId) {
@@ -679,7 +688,7 @@ class Market extends Contract {
     if(voting.voters){
       let index = voting.voters.findIndex(v => v.name === userId)
       if(voting.voters[index].vote !== null){
-        return { message: 'You already vote in this voting' };
+        return { message: 'You have already voted in this vote' };
       }
       if (index > -1) {
         voting.voters.splice(index)
