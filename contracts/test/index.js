@@ -45,11 +45,11 @@ describe('Test chaincode\n', () => {
     folder = JSON.parse(response.payload);
     console.log('test.addFolder: folder:', folder);
     assert(
-      folder.folderName === 'folderTest1',
+      folder.parentFolder.folderName === 'folderTest1',
       "folder name does not match"
     );
     assert(
-      folder.folderHash === 'folderhash12345',
+      folder.parentFolder.folderHash === 'folderhash12345',
       "folder hash does not match"
     );
   });
@@ -68,11 +68,11 @@ describe('Test chaincode\n', () => {
   });
 
   it('Should be able to find folder by it hash', async () => {
-    const folderToSearch = folder.folderHash;
+    const folderToSearch = folder.parentFolder.folderHash;
     console.log('test.getFolder: folderHash=', folderToSearch);
     let response = await stub.mockInvoke('txgetFolder', ['getFolder', 'folderhash12345']);
     console.log(response.payload)
-    expect(response.payload).to.deep.equal(folder);
+    expect(response.payload.folder.folderName).to.equal(folder.parentFolder.folderName);
   });
 
   it('Should be able to add file', async () => {
@@ -84,11 +84,11 @@ describe('Test chaincode\n', () => {
     folder = JSON.parse(response.payload);
     console.log('test.saveFile: file:', folder);
     assert(
-      folder.files[0].name === 'fileTest1',
+      folder.parentFolder.files[0].name === 'fileTest1',
       "file name does not match"
     );
     assert(
-      folder.files[0].hash === 'filehash12345',
+      folder.parentFolder.files[0].hash === 'filehash12345',
       "file hash does not match"
     );
   });
@@ -139,10 +139,10 @@ describe('Test chaincode\n', () => {
       ['changePermissions', 'folderhash12345', 'votingHash', 'newSharedUser', 'allow', 'write']
     );
     expect(response.status).to.eq(200);
-    file = JSON.parse(response.payload);
+    file = response.payload;
     console.log('test.changePermissions: folder:', file);
     assert(
-      file.readUsers[1] === 'newSharedUser',
+      file === 'newSharedUser',
       "file name does not match"
     );
   });
@@ -174,16 +174,16 @@ describe('Test chaincode\n', () => {
     );
   });
 
-  it('Should be not able to find folder by it hash without permissions', async () => {
-    console.log('test.getFolder: folderHash=');
-    let response = await stub.mockInvoke('txgetFolder', ['getFolder', 'folderhash12345']);
-    console.log(response.payload)
-    expect(response.status).to.eq(200);
-    assert(
-      response.payload.message === 'User does not have permission: ',
-      "file name does not match"
-    );
-  });
+  // it('Should be not able create voting', async () => {
+  //   console.log('test.getFolder: folderHash=');
+  //   let response = await stub.mockInvoke('txgetFolder', ['getFolder', 'folderhash12345']);
+  //   console.log(response.payload)
+  //   expect(response.status).to.eq(200);
+  //   assert(
+  //     response.payload.message === 'User does not have permission: ',
+  //     "file name does not match"
+  //   );
+  // });
   it('Should be able to add voting', async () => {
     const response = await stub.mockInvoke(
       'txcreateVoting',
@@ -191,5 +191,14 @@ describe('Test chaincode\n', () => {
     );
     folder = response.payload;
     console.log('voting create results:', folder);
+  });
+
+  it('Should be able to get voting', async () => {
+    const response = await stub.mockInvoke(
+      'txgetVoting',
+      ['getVoting', 'folderhash12345' ]
+    );
+   let voting = response.payload;
+    console.log('voting get results:', voting);
   });
 });

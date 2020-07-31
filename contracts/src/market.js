@@ -589,7 +589,6 @@ class Market extends Contract {
     if (voting.voters.length < 1) {
       return { message: 'You can`t create voting without voters' };
     }
-
     fileForVoting.voting.push(voting.votingHash)
     fileForVoting.sender = identity.cert.subject
     await ctx.stub.putState(hash, Buffer.from(JSON.stringify(fileForVoting)));
@@ -617,10 +616,13 @@ class Market extends Contract {
       let fileAsBytes = await ctx.stub.getState(folder.files[i].hash);
       const file = JSON.parse(fileAsBytes.toString())
       if (file.voting.length > 0) {
-        for (let j = 0; i < file.voting.length; j++) {
+        for (let j = 0; j < file.voting.length; j++) {
           let votingAsBytes = await ctx.stub.getState(file.voting[j]);
-          let votingIdentity = JSON.parse(votingAsBytes.toString())
-          if (votingIdentity.dueDate > Math.floor(new Date() / 1000)) {
+          let votingIdentity
+          if (!votingAsBytes || votingAsBytes.toString().length > 0) {
+            votingIdentity = JSON.parse(votingAsBytes.toString())
+          }
+          if (votingIdentity && votingIdentity.dueDate > Math.floor(new Date() / 1000)) {
             votingIdentity.status = false
           }
           voting.push(votingIdentity)
@@ -629,20 +631,18 @@ class Market extends Contract {
     }
     for (let i = 0; i < folder.folders.length; i++) {
       let child = await this.getVoting(ctx, folder.folders[i].hash);
-      for (let j = 0; i < child.length; j++) {
+      for (let j = 0; j < child.length; j++) {
         voting.push(child[j])
       }
     }
     if (folder.sharedFolders) {
       for (let i = 0; i < folder.sharedFolders.length; i++) {
         let child = await this.getVoting(ctx, folder.sharedFolders[i].hash);
-        for (let j = 0; i < child.length; j++) {
+        for (let j = 0; j < child.length; j++) {
           voting.push(child[j])
         }
       }
     }
-    folder.sender = identity.cert.subject
-    await ctx.stub.putState(hash, Buffer.from(JSON.stringify(folder)));
     return JSON.stringify(voting)
   }
 
@@ -662,7 +662,6 @@ class Market extends Contract {
     await ctx.stub.putState(hash, Buffer.from(JSON.stringify(voting)));
     return JSON.stringify(voting)
   }
-
 }
 
 module.exports = Market;
