@@ -568,7 +568,7 @@ class Market extends Contract {
       votingHash,
       versionTime: fileForVoting.versions[fileForVoting.versions.length - 1].time,
       dueDate,
-      variants,
+      variants: variants.split(','),
       voters: [],
       description,
       status: true,
@@ -653,7 +653,7 @@ class Market extends Contract {
     const userId = identity.cert.subject.commonName;
     let votingAsBytes = await ctx.stub.getState(hash);
     if (!votingAsBytes || votingAsBytes.toString().length <= 0) {
-      return
+      return{ message: 'Voting does not exist' };
     }
     let voting = JSON.parse(votingAsBytes.toString());
     let checkVariant = false
