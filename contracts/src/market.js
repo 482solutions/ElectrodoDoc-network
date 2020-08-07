@@ -624,7 +624,7 @@ class Market extends Contract {
           if (!votingAsBytes || votingAsBytes.toString().length > 0) {
             votingIdentity = JSON.parse(votingAsBytes.toString())
           }
-          if (votingIdentity && votingIdentity.dueDate > Math.floor(new Date() / 1000)) {
+          if (votingIdentity && votingIdentity.dueDate < Math.floor(new Date() / 1000)) {
             votingIdentity.status = false
           }
           voting.push(votingIdentity)
