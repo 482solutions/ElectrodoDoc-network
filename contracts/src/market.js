@@ -624,8 +624,9 @@ class Market extends Contract {
           if (!votingAsBytes || votingAsBytes.toString().length > 0) {
             votingIdentity = JSON.parse(votingAsBytes.toString())
           }
-          if (votingIdentity && votingIdentity.dueDate < Math.floor(new Date() / 1000)) {
+          if (votingIdentity.status && votingIdentity.dueDate < Math.floor(new Date() / 1000)) {
             votingIdentity.status = false
+            await ctx.stub.putState(file.voting[j], Buffer.from(JSON.stringify(votingIdentity)));
           }
           voting.push(votingIdentity)
         }
@@ -656,8 +657,9 @@ class Market extends Contract {
             if (!votingAsBytes || votingAsBytes.toString().length > 0) {
               votingIdentity = JSON.parse(votingAsBytes.toString())
             }
-            if (votingIdentity && votingIdentity.dueDate > Math.floor(new Date() / 1000)) {
+            if (votingIdentity.status && votingIdentity.dueDate < Math.floor(new Date() / 1000)) {
               votingIdentity.status = false
+              await ctx.stub.putState(file.voting[j], Buffer.from(JSON.stringify(votingIdentity)));
             }
             voting.push(votingIdentity)
           }
@@ -710,7 +712,7 @@ class Market extends Contract {
         return { message: 'You have already voted in this vote' };
       }
       if (index > -1) {
-        voting.voters.splice(index)
+        voting.voters.splice(index, 1)
         voting.voters.push({ name: userId, vote: variant })
       }
       voting.sender = identity.cert.subject
