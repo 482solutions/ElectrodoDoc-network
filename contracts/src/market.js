@@ -666,6 +666,7 @@ class Market extends Contract {
         }
       }
     }
+    voting.reverse();
     return JSON.stringify(voting)
   }
 
