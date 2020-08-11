@@ -333,12 +333,10 @@ class Market extends Contract {
     }
     if (object.files || object.folders) {
       for (let i = 0; i < object.files.length; i++) {
-        let response = await this.changeOwnership(ctx, object.files[i].hash, newOwner, null, null)
-        console.log(response)
+        await this.changeOwnership(ctx, object.files[i].hash, newOwner, null, null)
       }
       for (let j = 0; j < object.folders.length; j++) {
-        let response = await this.changeOwnership(ctx, object.folders[j].hash, newOwner, null, null)
-        console.log(response)
+        await this.changeOwnership(ctx, object.folders[j].hash, newOwner, null, null)
       }
     }
     object.sender = identity.cert.subject
@@ -422,7 +420,6 @@ class Market extends Contract {
           login,
           permissions,
           null)
-        console.log(response)
       }
       for (let j = 0; j < object.folders.length; j++) {
         let response = await this.changePermissions(ctx,
@@ -430,7 +427,6 @@ class Market extends Contract {
           login,
           permissions,
           null)
-        console.log(response)
       }
     }
     object.sender = identity.cert.subject
@@ -497,20 +493,18 @@ class Market extends Contract {
     }
     if (object.files || object.folders) {
       for (let i = 0; i < object.files.length; i++) {
-        let response = await this.revokePermissions(ctx,
+        await this.revokePermissions(ctx,
           object.files[i].hash,
           login,
           permissions,
           null)
-        console.log(response)
       }
       for (let j = 0; j < object.folders.length; j++) {
-        let response = await this.revokePermissions(ctx,
+        await this.revokePermissions(ctx,
           object.folders[j].hash,
           login,
           permissions,
           null)
-        console.log(response)
       }
     }
     object.sender = identity.cert.subject
@@ -602,17 +596,11 @@ class Market extends Contract {
   }
 
   async getVoting(ctx, hash) {
-    const identity = new ClientIdentity(ctx.stub);
-    const userId = identity.cert.subject.commonName;
-
     let folderAsBytes = await ctx.stub.getState(hash);
     if (!folderAsBytes || folderAsBytes.toString().length <= 0) {
       throw new Error('Folder with this hash does not exist');
     }
     const folder = JSON.parse(folderAsBytes.toString())
-    // if (folder.ownerId !== userId) {
-    //   return { message: 'User does not have permission' };
-    // }
     let voting = []
     for (let i = 0; i < folder.files.length; i++) {
       let fileAsBytes = await ctx.stub.getState(folder.files[i].hash);
@@ -675,16 +663,16 @@ class Market extends Contract {
     const userId = identity.cert.subject.commonName;
     let votingAsBytes = await ctx.stub.getState(hash);
     if (!votingAsBytes || votingAsBytes.toString().length <= 0) {
-      return{ message: 'Voting does not exist' };
+      return { message: 'Voting does not exist' };
     }
     let voting = JSON.parse(votingAsBytes.toString());
     let checkVariant = false
-    for(let i = 0; i<voting.variants.length; i++){
-      if (variant === voting.variants[i]){
+    for (let i = 0; i < voting.variants.length; i++) {
+      if (variant === voting.variants[i]) {
         checkVariant = true
       }
     }
-    if (!checkVariant){
+    if (!checkVariant) {
       return { message: 'Variant does not exist' };
     }
     let fileAsBytes = await ctx.stub.getState(voting.fileHash);
@@ -707,9 +695,9 @@ class Market extends Contract {
         return { message: 'User does not have permission' };
       }
     }
-    if(voting.voters){
+    if (voting.voters) {
       let index = voting.voters.findIndex(v => v.name === userId)
-      if(voting.voters[index].vote !== null){
+      if (voting.voters[index].vote !== null) {
         return { message: 'You have already voted in this vote' };
       }
       if (index > -1) {
