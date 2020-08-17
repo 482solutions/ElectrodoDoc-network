@@ -375,6 +375,10 @@ describe('Get voting', async () => {
       'saveFolder',
       ['saveFolder', 'folderTest2', '54326ee7446c1883038caa8b247a1a192a4a47dd20a82b7bd5c4fd886afe7410', 'root']
     )
+       await stub.mockInvoke(
+      'saveFolder',
+      ['saveFolder', 'folderTest3', '1q2wee7446c1883038caa8b247a1a192a4a47dd20a82b7bd5c4fd886afe7410', '54326ee7446c1883038caa8b247a1a192a4a47dd20a82b7bd5c4fd886afe7410']
+    )
     await stub.mockInvoke(
       'saveFile',
       ['saveFile', 'fileTest', '93766ee7446c1883038caa8b247a1a192a4a47dd20a82b7bd5c4fd886afe5089',

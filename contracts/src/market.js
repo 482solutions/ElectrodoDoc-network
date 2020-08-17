@@ -616,21 +616,27 @@ class Market extends Contract {
             votingIdentity.status = false
             await ctx.stub.putState(file.voting[j], Buffer.from(JSON.stringify(votingIdentity)));
           }
-          voting.push(votingIdentity)
+          if(votingIdentity.votingName){
+            voting.push(votingIdentity)
+          }
         }
       }
     }
     for (let i = 0; i < folder.folders.length; i++) {
       let child = await this.getVoting(ctx, folder.folders[i].hash);
       for (let j = 0; j < child.length; j++) {
-        voting.push(child[j])
+        if(child[j].votingName){
+          voting.push(child[j])
+        }
       }
     }
     if (folder.sharedFolders) {
       for (let i = 0; i < folder.sharedFolders.length; i++) {
         let child = await this.getVoting(ctx, folder.sharedFolders[i].hash);
         for (let j = 0; j < child.length; j++) {
-          voting.push(child[j])
+          if(child[j].votingName){
+            voting.push(child[j])
+          }
         }
       }
     }
@@ -649,7 +655,9 @@ class Market extends Contract {
               votingIdentity.status = false
               await ctx.stub.putState(file.voting[j], Buffer.from(JSON.stringify(votingIdentity)));
             }
-            voting.push(votingIdentity)
+            if(votingIdentity.votingName){
+              voting.push(votingIdentity)
+            }
           }
         }
       }
