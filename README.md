@@ -19,7 +19,7 @@ If you need to clear all data please run:
 - docker system prune -a -f
 ```
 
-##How to test:
+## How to test:
 ```
 - cd contracts
 - nvm use 8.9.0
