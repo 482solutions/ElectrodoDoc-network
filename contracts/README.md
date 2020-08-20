@@ -26,7 +26,7 @@ docker run --rm --network front_default --name cli \
 -v $(pwd)/data/msp:/opt/gopath/src/github.com/hyperledger/fabric/network/testchannel/msp \
 -v $(pwd)/contracts:/opt/gopath/src/github.com/hyperledger/fabric/contracts \
 -w="/opt/gopath/src/github.com/hyperledger/fabric/network/testchannel/" \
-hyperledger/fabric-tools:1.4 sh -c 'sleep 2 && echo ----Install chaincode on the node && peer chaincode install -l node -n electricitycc -v 1.5 -p /opt/gopath/src/github.com/hyperledger/fabric/contracts && peer chaincode upgrade -l node -n electricitycc -v 1.5 -p /opt/gopath/src/github.com/hyperledger/fabric/contracts -C testchannel -P "AND(\"482solutions.peer\")" -c "{\"Args\": [\"org.fabric.marketcontract:instantiate\"]}"'
+hyperledger/fabric-tools:1.4 sh -c 'sleep 2 && echo ----Install chaincode on the node && peer chaincode install -l node -n wodencc -v 1.5 -p /opt/gopath/src/github.com/hyperledger/fabric/contracts && peer chaincode upgrade -l node -n wodencc -v 1.5 -p /opt/gopath/src/github.com/hyperledger/fabric/contracts -C testchannel -P "AND(\"482solutions.peer\")" -c "{\"Args\": [\"org.fabric.wodencontract:instantiate\"]}"'
 ```
 
 If you don`t use deploy.sh:

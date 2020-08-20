@@ -1,4 +1,4 @@
 
-const MarketContract = require('./market');
+const WodenContract = require('./woden');
 
-module.exports.contracts = [ MarketContract];
+module.exports.contracts = [ WodenContract];

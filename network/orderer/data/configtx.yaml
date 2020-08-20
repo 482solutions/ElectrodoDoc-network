@@ -228,7 +228,7 @@ Orderer: &OrdererDefaults
     Addresses:
 
     # Batch Timeout: The amount of time to wait before creating a batch.
-    BatchTimeout: 2s
+    BatchTimeout: 400ms
 
     # Batch Size: Controls the number of messages batched into a block.
     # The orderer views messages opaquely, but typically, messages may
@@ -240,7 +240,7 @@ Orderer: &OrdererDefaults
 
         # Max Message Count: The maximum number of messages to permit in a
         # batch.  No block will contain more than this number of messages.
-        MaxMessageCount: 500
+        MaxMessageCount: 50
 
         # Absolute Max Bytes: The absolute maximum number of bytes allowed for
         # the serialized messages in a batch. The maximum block size is this value
@@ -249,7 +249,7 @@ Orderer: &OrdererDefaults
         # this value will be rejected by ordering. If the "kafka" OrdererType is
         # selected, set 'message.max.bytes' and 'replica.fetch.max.bytes' on
         # the Kafka brokers to a value that is larger than this one.
-        AbsoluteMaxBytes: 10 MB
+        AbsoluteMaxBytes: 1 MB
 
         # Preferred Max Bytes: The preferred maximum number of bytes allowed
         # for the serialized messages in a batch. Roughly, this field may be considered
@@ -262,7 +262,7 @@ Orderer: &OrdererDefaults
         # will contain only that message.  Because messages may be larger than
         # preferred max bytes (up to AbsoluteMaxBytes), some batches may exceed
         # the preferred max bytes, but will always contain exactly one transaction.
-        PreferredMaxBytes: 2 MB
+        PreferredMaxBytes: 1 MB
 
     # Max Channels is the maximum number of channels to allow on the ordering
     # network. When set to 0, this implies no maximum number of channels.

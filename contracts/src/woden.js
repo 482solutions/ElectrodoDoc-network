@@ -3,10 +3,10 @@
 const { Contract } = require('fabric-contract-api');
 const { ClientIdentity } = require('fabric-shim');
 
-class Market extends Contract {
+class Woden extends Contract {
 
   constructor() {
-    super('org.fabric.marketcontract');
+    super('org.fabric.wodencontract');
   }
 
   async instantiate(ctx) {
@@ -719,4 +719,4 @@ class Market extends Contract {
   }
 }
 
-module.exports = Market;
+module.exports = Woden;

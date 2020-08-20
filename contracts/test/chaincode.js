@@ -1,7 +1,6 @@
 'use strict';
 
 const shim = require('fabric-shim');
-// const  shim = require('fabric-contract-api');
 const contracts = require('../src');
 
 
