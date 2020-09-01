@@ -589,7 +589,7 @@ class Woden extends Contract {
     fileForVoting.sender = identity.cert.subject
     await ctx.stub.putState(hash, Buffer.from(JSON.stringify(fileForVoting)));
     await ctx.stub.putState(votingHash, Buffer.from(JSON.stringify(voting)));
-    const allVoting = JSON.parse(await this.getVoting(ctx, rootHash))
+    const allVoting = await this.getVoting(ctx, rootHash)
     allVoting.push(voting)
     return allVoting
 
@@ -605,46 +605,21 @@ class Woden extends Contract {
     for (let i = 0; i < folder.files.length; i++) {
       let fileAsBytes = await ctx.stub.getState(folder.files[i].hash);
       const file = JSON.parse(fileAsBytes.toString())
-      if (file.voting.length > 0) {
         for (let j = 0; j < file.voting.length; j++) {
           let votingAsBytes = await ctx.stub.getState(file.voting[j]);
           let votingIdentity
-          if (!votingAsBytes || votingAsBytes.toString().length > 0) {
             votingIdentity = JSON.parse(votingAsBytes.toString())
-          }
           if (votingIdentity.status && votingIdentity.dueDate < Math.floor(new Date() / 1000)) {
             votingIdentity.status = false
             await ctx.stub.putState(file.voting[j], Buffer.from(JSON.stringify(votingIdentity)));
           }
-          if(votingIdentity.votingName){
             voting.push(votingIdentity)
-          }
         }
-      }
-    }
-    for (let i = 0; i < folder.folders.length; i++) {
-      let child = await this.getVoting(ctx, folder.folders[i].hash);
-      for (let j = 0; j < child.length; j++) {
-        if(child[j].votingName){
-          voting.push(child[j])
-        }
-      }
-    }
-    if (folder.sharedFolders) {
-      for (let i = 0; i < folder.sharedFolders.length; i++) {
-        let child = await this.getVoting(ctx, folder.sharedFolders[i].hash);
-        for (let j = 0; j < child.length; j++) {
-          if(child[j].votingName){
-            voting.push(child[j])
-          }
-        }
-      }
     }
     if (folder.sharedFiles) {
       for (let i = 0; i < folder.sharedFiles.length; i++) {
         let fileAsBytes = await ctx.stub.getState(folder.sharedFiles[i].hash);
         const file = JSON.parse(fileAsBytes.toString())
-        if (file.voting.length > 0) {
           for (let j = 0; j < file.voting.length; j++) {
             let votingAsBytes = await ctx.stub.getState(file.voting[j]);
             let votingIdentity
@@ -655,15 +630,28 @@ class Woden extends Contract {
               votingIdentity.status = false
               await ctx.stub.putState(file.voting[j], Buffer.from(JSON.stringify(votingIdentity)));
             }
-            if(votingIdentity.votingName){
               voting.push(votingIdentity)
-            }
           }
+      }
+    }
+    if (folder.folders.length > 0) {
+    for (let i = 0; i < folder.folders.length; i++) {
+      let child = await this.getVoting(ctx, folder.folders[i].hash);
+      for (let j = 0; j < child.length; j++) {
+        voting.push(child[j])
+        }
+      }
+    }
+    if (folder.sharedFolders) {
+      for (let i = 0; i < folder.sharedFolders.length; i++) {
+        let child = await this.getVoting(ctx, folder.sharedFolders[i].hash);
+        for (let j = 0; j < child.length; j++) {
+          voting.push(child[j])
         }
       }
     }
     voting.reverse();
-    return JSON.stringify(voting)
+    return voting
   }
 
   async updateVoting(ctx, hash, variant) {
