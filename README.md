@@ -14,7 +14,7 @@
 If you need to clear all data please run: 
 ```
 - docker ps -a -q | xargs -n 1 -P 8 -I {} docker stop {}
-- docker ps -a -q | xargs -n 1 -P 8 -I {} docker rm {} (edited) 
+- docker ps -a -q | xargs -n 1 -P 8 -I {} docker rm {} 
 - docker volume prune -f
 - docker system prune -a -f
 ```
