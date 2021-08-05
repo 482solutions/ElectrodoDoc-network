@@ -2,11 +2,11 @@ version: "3"
 
 services:
   orderer:
-    image: hyperledger/fabric-peer:1.4
+    image: hyperledger/fabric-peer:2.2.3
     container_name: fabric_peer
     working_dir: /etc/hyperledger/fabric
     volumes:
-      - ./data:/etc/hyperledger/fabric
+      - ./network/peer/data:/etc/hyperledger/fabric
       - /var/run/:/host/var/run/
     ports:
       - 7051:7051
