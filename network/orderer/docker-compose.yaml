@@ -6,7 +6,7 @@ services:
     container_name: fabric_orderer
     working_dir: /etc/hyperledger/fabric
     volumes:
-      - ./network/orderer/data:/etc/hyperledger/fabric
+      - ./data:/etc/hyperledger/fabric
     ports:
       - 7050:7050
     command: orderer
