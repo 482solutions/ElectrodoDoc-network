@@ -37,13 +37,19 @@
 #############################################################################
 
 # Version of config file
-version: 1.2.0
+version: 1.4.2
 
 # Server's listening port (default: 7054)
 port: 7054
 
+# Cross-Origin Resource Sharing (CORS)
+cors:
+    enabled: false
+    origins:
+      - "*"
+
 # Enables debug logging (default: false)
-debug: true
+debug: false
 
 # Size limit of an acceptable CRL in bytes (default: 512000)
 crlsizelimit: 512000
@@ -60,7 +66,7 @@ crlsizelimit: 512000
 #############################################################################
 tls:
   # Enable TLS (default: false)
-  enabled: true
+  enabled: false
   # TLS for the server's listening port
   certfile:
   keyfile:
@@ -81,7 +87,6 @@ tls:
 ca:
   # Name of this CA
   name: 482solutions
-  ### OrdererCA
   # Key file (is only used to import a private key into BCCSP)
   keyfile:
   # Certificate file (default: ca-cert.pem)
@@ -125,7 +130,7 @@ registry:
   # Contains identity information which is used when LDAP is disabled
   identities:
      - name: admin
-       pass: adminpw
+       pass: password
        type: client
        affiliation: "482solutions.prj-fabric"
        attrs:
@@ -241,12 +246,6 @@ affiliations:
   482solutions:
     - prj-fabric
 
-###    org1:
-###       - department1
-###       - department2
-###    org2:
-###       - department1
-### 
 #############################################################################
 #  Signing section
 #
@@ -306,6 +305,9 @@ signing:
 ###########################################################################
 csr:
    cn: ca.fabric.482.solutions
+   keyrequest:
+     algo: ecdsa
+     size: 256
    names:
       - C: UA
         ST: "Odeska oblast"
@@ -318,20 +320,30 @@ csr:
    ca:
       expiry: 131400h
       pathlength: 1
-###csr:
-###   cn: ca.example.com
-###   names:
-###      - C: US
-###        ST: "New York"
-###        L: "New York"
-###        O: example.com
-###        OU:
-###   hosts:
-###     - localhost
-###     - example.com
-###   ca:
-###      expiry: 131400h
-###      pathlength: 1
+
+###########################################################################
+# Each CA can issue both X509 enrollment certificate as well as Idemix
+# Credential. This section specifies configuration for the issuer component
+# that is responsible for issuing Idemix credentials.
+###########################################################################
+idemix:
+  # Specifies pool size for revocation handles. A revocation handle is an unique identifier of an
+  # Idemix credential. The issuer will create a pool revocation handles of this specified size. When
+  # a credential is requested, issuer will get handle from the pool and assign it to the credential.
+  # Issuer will repopulate the pool with new handles when the last handle in the pool is used.
+  # A revocation handle and credential revocation information (CRI) are used to create non revocation proof
+  # by the prover to prove to the verifier that her credential is not revoked.
+  rhpoolsize: 1000
+
+  # The Idemix credential issuance is a two step process. First step is to  get a nonce from the issuer
+  # and second step is send credential request that is constructed using the nonce to the isuser to
+  # request a credential. This configuration property specifies expiration for the nonces. By default is
+  # nonces expire after 15 seconds. The value is expressed in the time.Duration format (see https://golang.org/pkg/time/#ParseDuration).
+  nonceexpiration: 15s
+
+  # Specifies interval at which expired nonces are removed from datastore. Default value is 15 minutes.
+  #  The value is expressed in the time.Duration format (see https://golang.org/pkg/time/#ParseDuration)
+  noncesweepinterval: 15m
 
 #############################################################################
 # BCCSP (BlockChain Crypto Service Provider) section is used to select which
@@ -346,82 +358,6 @@ bccsp:
             # The directory used for the software file-based keystore
             keystore: msp/keystore
 
-#############################################################################
-# Multi CA section
-#
-# Each Fabric CA server contains one CA by default.  This section is used
-# to configure multiple CAs in a single server.
-#
-# 1) --cacount <number-of-CAs>
-# Automatically generate <number-of-CAs> non-default CAs.  The names of these
-# additional CAs are "ca1", "ca2", ... "caN", where "N" is <number-of-CAs>
-# This is particularly useful in a development environment to quickly set up
-# multiple CAs. Note that, this config option is not applicable to intermediate CA server
-# i.e., Fabric CA server that is started with intermediate.parentserver.url config
-# option (-u command line option)
-#
-# 2) --cafiles <CA-config-files>
-# For each CA config file in the list, generate a separate signing CA.  Each CA
-# config file in this list MAY contain all of the same elements as are found in
-# the server config file except port, debug, and tls sections.
-#
-# Examples:
-# fabric-ca-server start -b admin:adminpw --cacount 2
-#
-# fabric-ca-server start -b admin:adminpw --cafiles ca/ca1/fabric-ca-server-config.yaml
-# --cafiles ca/ca2/fabric-ca-server-config.yaml
-#
-#############################################################################
-
-cacount:
-
-cafiles:
-
-#############################################################################
-# Intermediate CA section
-#
-# The relationship between servers and CAs is as follows:
-#   1) A single server process may contain or function as one or more CAs.
-#      This is configured by the "Multi CA section" above.
-#   2) Each CA is either a root CA or an intermediate CA.
-#   3) Each intermediate CA has a parent CA which is either a root CA or another intermediate CA.
-#
-# This section pertains to configuration of #2 and #3.
-# If the "intermediate.parentserver.url" property is set,
-# then this is an intermediate CA with the specified parent
-# CA.
-#
-# parentserver section
-#    url - The URL of the parent server
-#    caname - Name of the CA to enroll within the server
-#
-# enrollment section used to enroll intermediate CA with parent CA
-#    profile - Name of the signing profile to use in issuing the certificate
-#    label - Label to use in HSM operations
-#
-# tls section for secure socket connection
-#   certfiles - PEM-encoded list of trusted root certificate files
-#   client:
-#     certfile - PEM-encoded certificate file for when client authentication
-#     is enabled on server
-#     keyfile - PEM-encoded key file for when client authentication
-#     is enabled on server
-#############################################################################
-intermediate:
-  parentserver:
-    url:
-    caname:
-
-  enrollment:
-    hosts:
-    profile:
-    label:
-
-  tls:
-    certfiles:
-    client:
-      certfile:
-      keyfile:
 #############################################################################
 # CA configuration section
 #
@@ -470,7 +406,7 @@ operations:
 ###############################################################################
 metrics:
     # statsd, prometheus, or disabled
-    provider: prometheus
+    provider: disabled
 
     # statsd configuration
     statsd:
