@@ -1,63 +1,31 @@
-################################################################################
+# Copyright IBM Corp. All Rights Reserved.
 #
-#   ORGANIZATIONS
+# SPDX-License-Identifier: Apache-2.0
 #
-#   This section defines the organizational identities that can be referenced
-#   in the configuration profiles.
-#
-################################################################################
+
+---
+
 Organizations:
-    # 482solutions defines an MSP using the sampleconfig. It should never be used
-    # in production but may be used as a template for other definitions.
     - &482solutions
-        # Name is the key by which this org will be referenced in channel
-        # configuration transactions.
-        # Name can include alphanumeric characters as well as dots and dashes.
-        Name: 482solutions
-
-        # ID is the key by which this org's MSP definition will be referenced.
-        # ID can include alphanumeric characters as well as dots and dashes.
-        ID: 482solutions
-
-        # MSPDir is the filesystem path which contains the MSP configuration.
-        MSPDir: msp
-
-        # Policies defines the set of policies at this level of the config tree
-        # For organization policies, their canonical path is usually
-        #   /Channel/<Application|Orderer>/<OrgName>/<PolicyName>
+        Name: 482solutionsMSP
+        ID: 482solutionsMSP
+        MSPDir: peer/msp
         Policies: &482solutionsPolicies
             Readers:
                 Type: Signature
-                Rule: "OR('482solutions.client', '482solutions.admin', '482solutions.peer')"
+                Rule: "OR('482solutionsMSP.client', '482solutionsMSP.peer', '482solutionsMSP.admin')"
             Writers:
                 Type: Signature
-                Rule: "OR('482solutions.client', '482solutions.admin', '482solutions.peer')"
+                Rule: "OR('482solutionsMSP.client', '482solutionsMSP.admin')"
             Admins:
                 Type: Signature
-                Rule: "OR('482solutions.admin')"
-
-        # OrdererEndpoints is a list of all orderers this org runs which clients
-        # and peers may to connect to to push transactions and receive blocks respectively.
-        OrdererEndpoints:
-            - "172.28.0.5:7050"
-
-        # AnchorPeers defines the location of peers which can be used for
-        # cross-org gossip communication. Note, this value is only encoded in
-        # the genesis block in the Application section context.
-        AnchorPeers:
+                Rule: "OR('482solutionsMSP.admin')"            
+            Endorsement:
+                Type: Signature
+                Rule: "OR('482solutionsMSP.peer')"
 
 
-################################################################################
-#
-#   SECTION: Application
-#
-#   - This section defines the values to encode into a config transaction or
-#   genesis block for application related parameters
-#
-################################################################################
 Application: &ApplicationDefaults
-        # Organizations is the list of orgs which are defined as participants on
-        # the application side of the network
     Policies: &ApplicationDefaultPolicies
         Readers:
             Type: ImplicitMeta
@@ -74,14 +42,7 @@ Capabilities:
     Application: &ApplicationCapabilities
         V1_4_2: true
 
-################################################################################
-#
-#   Profile
-#
-#   - Different configuration profiles may be encoded here to be specified
-#   as parameters to the configtxgen tool
-#
-################################################################################
+
 Profiles:
     TestChannel:
         Consortium: SampleConsortium

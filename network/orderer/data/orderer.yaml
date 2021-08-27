@@ -19,7 +19,7 @@ General:
     #  - json: A simple file ledger that writes blocks to disk in JSON format.
     # Only one production ledger type is provided:
     #  - file: A production file-based ledger.
-    LedgerType: file
+    ###LedgerType: file
 
     # Listen address: The IP on which to bind to listen.
     ListenAddress: 0.0.0.0
@@ -81,24 +81,28 @@ General:
     #  - provisional: Utilizes a genesis profile, specified by GenesisProfile,
     #                 to dynamically generate a new genesis block.
     #  - file: Uses the file provided by GenesisFile as the genesis block.
-    GenesisMethod: provisional
+    ###GenesisMethod: provisional
+    BootstrapMethod: file
+    #file
 
     # Genesis profile: The profile to use to dynamically generate the genesis
     # block to use when initializing the orderer system channel and
     # GenesisMethod is set to "provisional". See the configtx.yaml file for the
     # descriptions of the available profiles. Ignored if GenesisMethod is set to
     # "file".
-    GenesisProfile: SampleSingleMSPSolo
+    ###GenesisProfile: SampleSingleMSPSolo
+    BootstrapFile: 
+    #genesisblock
 
     # Genesis file: The file containing the genesis block to use when
     # initializing the orderer system channel and GenesisMethod is set to
     # "file". Ignored if GenesisMethod is set to "provisional".
-    GenesisFile: genesisblock
+    ###GenesisFile: genesisblock
 
     # LocalMSPDir is where to find the private crypto material needed by the
     # orderer. It is set relative here as a default for dev environments but
     # should be changed to the real location in production.
-    LocalMSPDir: /etc/hyperledger/fabric/msp
+    LocalMSPDir: msp
 
     # LocalMSPID is the identity to register the local MSP material with the MSP
     # manager. IMPORTANT: The local MSP ID of an orderer needs to match the MSP
@@ -154,12 +158,28 @@ FileLedger:
     # Location: The directory to store the blocks in.
     # NOTE: If this is unset, a new temporary location will be chosen every time
     # the orderer is restarted, using the prefix specified by Prefix.
-    Location: /etc/hyperledger/fabric
-
+    Location: /var/hyperledger/production/orderer
+    
     # The prefix to use when generating a ledger directory in temporary space.
     # Otherwise, this value is ignored.
     Prefix: hyperledger-fabric-ordererledger
 
+################################################################################
+#
+#   Debug Configuration
+#
+#   - This controls the debugging options for the orderer
+#
+################################################################################
+Debug:
+
+    # BroadcastTraceDir when set will cause each request to the Broadcast service
+    # for this orderer to be written to a file in this directory
+    BroadcastTraceDir:
+
+    # DeliverTraceDir when set will cause each request to the Deliver service
+    # for this orderer to be written to a file in this directory
+    DeliverTraceDir:
 ################################################################################
 #
 #   Operations Configuration
@@ -215,3 +235,22 @@ Metrics:
 
       # The prefix is prepended to all emitted statsd metrics
       Prefix:
+################################################################################
+#
+#   Consensus Configuration
+#
+#   - This section contains config options for a consensus plugin. It is opaque
+#     to orderer, and completely up to consensus implementation to make use of.
+#
+################################################################################
+Consensus:
+    # The allowed key-value pairs here depend on consensus plugin. For etcd/raft,
+    # we use following options:
+
+    # WALDir specifies the location at which Write Ahead Logs for etcd/raft are
+    # stored. Each channel will have its own subdir named after channel ID.
+    WALDir: /etc/hyperledger/production/orderer/etcdraft/wal
+
+    # SnapDir specifies the location at which snapshots for etcd/raft are
+    # stored. Each channel will have its own subdir named after channel ID.
+    SnapDir: /etc/hyperledger/production/orderer/etcdraft/snapshot

@@ -6,7 +6,7 @@ docker-compose -f ./network/ca/docker-compose.yaml up -d
 #
 docker run --rm --network front_default --name fabric_ca_client \
 -e "FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server" \
--v $(pwd)/data:/etc/hyperledger/fabric-ca-server hyperledger/fabric-ca:1.4 \
+-v $(pwd)/data:/etc/hyperledger/fabric-ca-server hyperledger/fabric-ca:1.4.9 \
 sh -c 'sleep 5 && fabric-ca-client enroll --url http://admin:password@172.28.0.3:7054'
 #
 mkdir -p ./admin
@@ -14,12 +14,12 @@ cp -r ./data/msp ./admin/
 #
 docker run --rm --network front_default --name fabric_ca_client \
 -e "FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server" \
--v $(pwd)/data:/etc/hyperledger/fabric-ca-server hyperledger/fabric-ca:1.4 \
+-v $(pwd)/data:/etc/hyperledger/fabric-ca-server hyperledger/fabric-ca:1.4.9 \
 sh -c 'sleep 5 && fabric-ca-client register --id.name peer1 --id.affiliation 482solutions.prj-fabric --id.secret passwd --id.type peer'
 #
 docker run --rm --network front_default --name fabric_ca_client \
 -e "FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server" \
--v $(pwd)/data:/etc/hyperledger/fabric-ca-server hyperledger/fabric-ca:1.4 \
+-v $(pwd)/data:/etc/hyperledger/fabric-ca-server hyperledger/fabric-ca:1.4.9 \
 sh -c 'sleep 5 && fabric-ca-client enroll -u http://peer1:passwd@172.28.0.3:7054'
 #
 cp -r ./data/msp ./network/peer/data/
@@ -88,7 +88,7 @@ docker run --rm --network front_default --name cli \
 -v $(pwd)/contracts:/opt/gopath/src/github.com/hyperledger/fabric/contracts \
 -w="/opt/gopath/src/github.com/hyperledger/fabric/network/testchannel/" \
 hyperledger/fabric-tools:1.4 sh -c 'sleep 2 && echo ----Create the channel &&
-peer channel create -c testchannel --file ./testchannel_create.pb --orderer 172.28.0.5:7050'
+peer channel create -c testchannel --file ./testchannel_create.pb --orderer 172.28.0.5:7050 --orderer 172.28.0.15:7080'
 #
 docker run --rm --network front_default --name cli \
 -e "GOPATH=/opt/gopath" \
@@ -137,3 +137,25 @@ peer channel join --orderer 172.28.0.5:7050 --blockpath ./testchannel.block'
 # docker stop cli
 #
 #sudo docker run --rm --networkfront_default --name cli -e "GOPATH=/opt/gopath" -e "CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock" -e "FABRIC_CFG_PATH=/opt/gopath/src/github.com/hyperledger/fabric/network/peer/data" -e "CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/network/testchannel/msp" -v $(pwd)/network/peer/data:/opt/gopath/src/github.com/hyperledger/fabric/network/peer/data -v $(pwd)/network/testchannel:/opt/gopath/src/github.com/hyperledger/fabric/network/testchannel/ -v $(pwd)/data/msp:/opt/gopath/src/github.com/hyperledger/fabric/network/testchannel/msp -v $(pwd)/contracts:/opt/gopath/src/github.com/hyperledger/fabric/contracts -w="/opt/gopath/src/github.com/hyperledger/fabric/network/testchannel/" hyperledger/fabric-tools:1.4 sh -c 'peer chaincode install -l node -n wodencc -v 0.1 -p /opt/gopath/src/github.com/hyperledger/fabric/contracts && sleep 2 && echo ----Instantiate chaincode on the channel && peer chaincode instantiate -C testchannel -l node -n wodencc -v 0.1 -P "AND(\"482solutions.peer\")" -c "{\"Args\": [\"org.fabric.wodencontract:instantiate\"]}"'
+
+
+
+
+configtxgen -profile TwoOrgsOrdererGenesis -channelID system-channel -outputBlock ./system-genesis-block/genesis.block
+
+docker run --rm --network front_default --name cli \
+-e "GOPATH=/opt/gopath" \
+-e "CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock" \
+-e "FABRIC_CFG_PATH=/opt/gopath/src/github.com/hyperledger/fabric/network/orderer/data" \
+-v $(pwd)/network/orderer/data:/opt/gopath/src/github.com/hyperledger/fabric/network/orderer/data \
+-v $(pwd)/network/systemchannel:/opt/gopath/src/github.com/hyperledger/fabric/network/systemchannel/ \
+-v $(pwd)/data/msp:/opt/gopath/src/github.com/hyperledger/fabric/network/systemchannel/msp \
+-w="/opt/gopath/src/github.com/hyperledger/fabric/network/systemchannel/" \
+hyperledger/fabric-tools:2.2.3 sh -c 'sleep 5 &&
+echo ----Build the channel creation transaction &&
+configtxgen -profile OrgOrdererGenesis -channelID system-channel -outputBlock ./system-genesis-block/genesis.block'
+
+
+
+
+docker run --rm --network front_default --name cli -e "GOPATH=/opt/gopath" -e "CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock" -e "FABRIC_CFG_PATH=/opt/gopath/src/github.com/hyperledger/fabric/network/peer/data" -e "CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/network/testchannel/msp" -v $(pwd)/network/peer/data:/opt/gopath/src/github.com/hyperledger/fabric/network/peer/data -v $(pwd)/network/testchannel:/opt/gopath/src/github.com/hyperledger/fabric/network/testchannel/ -v $(pwd)/data/msp:/opt/gopath/src/github.com/hyperledger/fabric/network/testchannel/msp -v $(pwd)/contracts:/opt/gopath/src/github.com/hyperledger/fabric/contracts -w="/opt/gopath/src/github.com/hyperledger/fabric/network/testchannel/" hyperledger/fabric-tools:1.4 sh -c 'sleep 5 && echo ----Build the channel creation transaction && configtxgen -asOrg 482solutions -channelID testchannel -configPath $(pwd) -outputCreateChannelTx ./testchannel_create.pb -profile TestChannel'

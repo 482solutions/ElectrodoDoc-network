@@ -6,8 +6,8 @@ services:
     container_name: fabric_peer
     working_dir: /etc/hyperledger/fabric
     volumes:
-      - ./data:/etc/hyperledger/fabric
-      - /var/run/:/host/var/run/
+      - ./data:/etc/hyperledger/production/fabric
+      - /var/run/fabric_peer:/host/var/run/
     ports:
       - 7051:7051
       - 7052:7052
