@@ -1,12 +1,14 @@
 #!/bin/bash
 #
 docker network rm front_default
+sleep 5
 docker network create --driver=bridge  --subnet=172.28.0.0/16  --ip-range=172.28.0.0/24   --gateway=172.28.0.254  front_default
+sleep 5
 docker-compose -f ./network/ca/docker-compose.yaml up -d
 #
 docker run --rm --network front_default --name fabric_ca_client \
 -e "FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server" \
--v $(pwd)/data:/etc/hyperledger/fabric-ca-server hyperledger/fabric-ca:1.4.9 \
+-v $(pwd)/network/ca/data:/etc/hyperledger/fabric-ca-server hyperledger/fabric-ca:1.4.9 \
 sh -c 'sleep 5 && fabric-ca-client enroll --url http://admin:password@172.28.0.3:7054'
 #
 mkdir -p ./admin

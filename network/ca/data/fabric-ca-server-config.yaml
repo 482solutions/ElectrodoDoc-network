@@ -37,13 +37,13 @@
 #############################################################################
 
 # Version of config file
-version: 1.2.0
+version: 1.4.0
 
 # Server's listening port (default: 7054)
 port: 7054
 
 # Enables debug logging (default: false)
-debug: true
+debug: false
 
 # Size limit of an acceptable CRL in bytes (default: 512000)
 crlsizelimit: 512000
@@ -125,8 +125,8 @@ registry:
   # Contains identity information which is used when LDAP is disabled
   identities:
      - name: admin
-       pass: adminpw
-       type: client
+       pass: password
+       type: admin
        affiliation: "482solutions.prj-fabric"
        attrs:
           hf.Registrar.Roles: "*"
