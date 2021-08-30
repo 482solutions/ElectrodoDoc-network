@@ -31,59 +31,18 @@ done
 docker run --rm --network hlf2 --name fabric_ca_client \
 -e "FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server" \
 -e "FABRIC_CA_CLIENT_TLS_CERTFILES=/etc/hyperledger/fabric-ca-server/tls-cert.pem" \
--v $(pwd)/tmp_data:/etc/hyperledger/fabric-ca-server \
+-v $(pwd)/admin_data:/etc/hyperledger/fabric-ca-server \
 -v $(pwd)/network/ca/ca_data/tls-cert.pem:/etc/hyperledger/fabric-ca-server/tls-cert.pem hyperledger/fabric-ca:1.4.9 \
 sh -c 'sleep 5 && fabric-ca-client enroll --url https://admin:password@ca.482.solutions:7054'
 
 
 
-echo "${yellow} -----3.Backup admin msp----- ${reset}"
+### echo "${yellow} -----3.Backup admin msp----- ${reset}"
 
-mkdir -p ./admin/msp
-cp -r ./tmp_data/msp ./admin/ 
-cp ./tmp_data/tls-cert.pem ./admin/tls-cert.pem
+### mkdir -p ./admin/msp
+### cp -r ./tmp_data/msp ./admin/ 
+### cp ./tmp_data/tls-cert.pem ./admin/tls-cert.pem
 
-
-
-echo "${yellow} -----4.Register peer account----- ${reset}"
-
-docker run --rm --network hlf2 --name fabric_ca_client \
--e "FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server" \
--e "FABRIC_CA_CLIENT_TLS_CERTFILES=/etc/hyperledger/fabric-ca-server/ca-cert.pem" \
--v $(pwd)/tmp_data:/etc/hyperledger/fabric-ca-server \
--v $(pwd)/network/ca/ca_data/ca-cert.pem:/etc/hyperledger/fabric-ca-server/ca-cert.pem hyperledger/fabric-ca:1.4.9 \
-sh -c 'sleep 5 && fabric-ca-client register --id.name peer1 --id.affiliation 482solutions.prj-fabric --id.secret passwd --id.type peer'
-
-echo "${yellow} -----5.Enroll peer account----- ${reset}"
-
-docker run --rm --network hlf2 --name fabric_ca_client \
--e "FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server" \
--e "FABRIC_CA_CLIENT_TLS_CERTFILES=/etc/hyperledger/fabric-ca-server/ca-cert.pem" \
--v $(pwd)/tmp_data:/etc/hyperledger/fabric-ca-server \
--v $(pwd)/network/ca/ca_data/ca-cert.pem:/etc/hyperledger/fabric-ca-server/ca-cert.pem hyperledger/fabric-ca:1.4.9 \
-sh -c 'sleep 5 && fabric-ca-client enroll -u https://peer1:passwd@ca.482.solutions:7054'
-
-echo "${yellow} -----6.Build node MSP----- ${reset}"
-
-cp -r ./tmp_data/msp ./network/peer/peer_data/
-mkdir -p ./network/peer/peer_data/msp/admincerts
-cp ./admin/msp/signcerts/cert.pem ./network/peer/peer_data/msp/admincerts/
-cp ./network/msp/config.yaml ./network/peer/peer_data/msp/
-
-#####END Refactored section#####
-
-# Change values in all Certificate fields of ./data/msp/config.yaml to the actual name of the certificate in ./data/msp/cacerts
-# Change peer settings
-# In ./data/core.yaml change the following settings:
-# peer.address to the actual IP address of your node server
-# If --id.name in "Create node account" was different from the provided in the tutorial, change peer.id to the actual peer name.
-
-echo "${yellow} -----7.Run Fabric Peer Node----- ${reset}"
-
-### cd ./network/peer
-### docker-compose up -d
-### cd ../../
-docker-compose -f ./network/peer/peer1_docker-compose.yaml up -d
 
 
 
@@ -94,54 +53,97 @@ docker-compose -f ./network/peer/peer1_docker-compose.yaml up -d
 
 
 
-echo "${yellow} -----8.Register orderer account----- ${reset}"
+echo "${yellow} -----4.Register orderer account----- ${reset}"
 
-docker run --rm --network hlf2 --name fabric_ca_client \
--e "FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server" \
--e "FABRIC_CA_CLIENT_TLS_CERTFILES=/etc/hyperledger/fabric-ca-server/tls-cert.pem" \
--v $(pwd)/tmp_data:/etc/hyperledger/fabric-ca-server \
--v $(pwd)/network/ca/ca_data/tls-cert.pem:/etc/hyperledger/fabric-ca-server/tls-cert.pem hyperledger/fabric-ca:1.4 \
-sh -c 'sleep 5 && fabric-ca-client enroll --url https://admin:password@ca.482.solutions:7054'
+### docker run --rm --network hlf2 --name fabric_ca_client \
+### -e "FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server" \
+### -e "FABRIC_CA_CLIENT_TLS_CERTFILES=/etc/hyperledger/fabric-ca-server/tls-cert.pem" \
+### -v $(pwd)/tmp_data:/etc/hyperledger/fabric-ca-server \
+### -v $(pwd)/network/ca/ca_data/tls-cert.pem:/etc/hyperledger/fabric-ca-server/tls-cert.pem hyperledger/fabric-ca:1.4 \
+### sh -c 'sleep 5 && fabric-ca-client enroll --url https://admin:password@ca.482.solutions:7054'
 
 docker run --rm --network hlf2 --name fabric_ca_client \
 -e "FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server" \
 -e "FABRIC_CA_CLIENT_TLS_CERTFILES=/etc/hyperledger/fabric-ca-server/ca-cert.pem" \
--v $(pwd)/tmp_data:/etc/hyperledger/fabric-ca-server \
+-v $(pwd)/admin_data:/etc/hyperledger/fabric-ca-server \
 -v $(pwd)/network/ca/ca_data/ca-cert.pem:/etc/hyperledger/fabric-ca-server/ca-cert.pem hyperledger/fabric-ca:1.4.9 \
 sh -c 'sleep 5 && fabric-ca-client register --id.name orderer --id.affiliation 482solutions.prj-fabric --id.secret passwd --id.type orderer'
 
 
-echo "${yellow} -----9.Enroll orderer account----- ${reset}"
+echo "${yellow} -----5.Enroll orderer account----- ${reset}"
 
 docker run --rm --network hlf2 --name fabric_ca_client \
 -e "FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server" \
 -e "FABRIC_CA_CLIENT_TLS_CERTFILES=/etc/hyperledger/fabric-ca-server/ca-cert.pem" \
--v $(pwd)/tmp_data:/etc/hyperledger/fabric-ca-server \
+-v $(pwd)/network/orderer/orderer_data:/etc/hyperledger/fabric-ca-server \
 -v $(pwd)/network/ca/ca_data/ca-cert.pem:/etc/hyperledger/fabric-ca-server/ca-cert.pem hyperledger/fabric-ca:1.4.9 \
 sh -c 'sleep 5 && fabric-ca-client enroll -u https://orderer:passwd@ca.482.solutions:7054'
 
 
-echo "${yellow} -----10.Build orderer MSP----- ${reset}"
+echo "${yellow} -----6.Build orderer MSP----- ${reset}"
 
-cp -r ./tmp_data/msp ./network/orderer/orderer_data/
+### cp -r ./tmp_data/msp ./network/orderer/orderer_data/
 mkdir -p ./network/orderer/orderer_data/msp/admincerts
 cp ./admin/msp/signcerts/cert.pem ./network/orderer/orderer_data/msp/admincerts/
-cp ./network/msp/config.yaml ./network/orderer/orderer_data/msp/
+### cp ./network/msp/config.yaml ./network/orderer/orderer_data/msp/
 # Change values in all Certificate fields of ./data/msp/config.yaml to the actual name of the certificate in ./data/msp/cacerts
 # Change orderer settings
 # In ./data/configtx.yaml change the following:
 # In Organizations[482solutions].AnchorPeers list the IP address of the previously created peer.
 # In Profiles.SampleSingleMSPSolo.Orderer.Addresses fill in the IP address of the orderer service.
 
-
-
-echo "${yellow} -----11.Run Fabric Orderer Node----- ${reset}"
+echo "${yellow} -----7.Run Fabric Orderer Node----- ${reset}"
 
 docker-compose -f ./network/orderer/orderer_docker-compose.yaml up -d
 ### 
 ### cd ./network/orderer
 ### docker-compose up -d
 ### cd ../../
+
+
+
+echo "${yellow} -----8.Register peer account----- ${reset}"
+
+docker run --rm --network hlf2 --name fabric_ca_client \
+-e "FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server" \
+-e "FABRIC_CA_CLIENT_TLS_CERTFILES=/etc/hyperledger/fabric-ca-server/ca-cert.pem" \
+-v $(pwd)/admin_data:/etc/hyperledger/fabric-ca-server \
+-v $(pwd)/network/ca/ca_data/ca-cert.pem:/etc/hyperledger/fabric-ca-server/ca-cert.pem hyperledger/fabric-ca:1.4.9 \
+sh -c 'sleep 5 && fabric-ca-client register --id.name peer1 --id.affiliation 482solutions.prj-fabric --id.secret passwd --id.type peer'
+
+echo "${yellow} -----9.Enroll peer account----- ${reset}"
+
+docker run --rm --network hlf2 --name fabric_ca_client \
+-e "FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server" \
+-e "FABRIC_CA_CLIENT_TLS_CERTFILES=/etc/hyperledger/fabric-ca-server/ca-cert.pem" \
+-v $(pwd)/network/peer/peer_data:/etc/hyperledger/fabric-ca-server \
+-v $(pwd)/network/ca/ca_data/ca-cert.pem:/etc/hyperledger/fabric-ca-server/ca-cert.pem hyperledger/fabric-ca:1.4.9 \
+sh -c 'sleep 5 && fabric-ca-client enroll -u https://peer1:passwd@ca.482.solutions:7054'
+
+echo "${yellow} -----10.Build node MSP----- ${reset}"
+
+# cp -r ./tmp_data/msp ./network/peer/peer_data/
+mkdir -p ./network/peer/peer_data/msp/admincerts
+cp ./admin/msp/signcerts/cert.pem ./network/peer/peer_data/msp/admincerts/
+### cp ./network/msp/config.yaml ./network/peer/peer_data/msp/
+
+#####END Refactored section#####
+
+# Change values in all Certificate fields of ./data/msp/config.yaml to the actual name of the certificate in ./data/msp/cacerts
+# Change peer settings
+# In ./data/core.yaml change the following settings:
+# peer.address to the actual IP address of your node server
+# If --id.name in "Create node account" was different from the provided in the tutorial, change peer.id to the actual peer name.
+
+echo "${yellow} -----11.Run Fabric Peer Node----- ${reset}"
+
+### cd ./network/peer
+### docker-compose up -d
+### cd ../../
+docker-compose -f ./network/peer/peer1_docker-compose.yaml up -d
+
+
+
 echo "${yellow} ----Update admin msp----- ${reset}"
 
 exit (0)
