@@ -2,18 +2,18 @@ version: "3"
 
 services:
   orderer:
-    image: hyperledger/fabric-orderer:1.4
-    container_name: fabric_orderer
+    image: hyperledger/fabric-orderer:2.2.3
+    container_name: orderer.482.solutions
     working_dir: /etc/hyperledger/fabric
     volumes:
-      - ./data:/etc/hyperledger/fabric
+      - ./orderer_data:/etc/hyperledger/fabric
     ports:
       - 7050:7050
     command: orderer
     networks:
       front_default:
-         ipv4_address: 172.28.0.5
+         hlf2: 172.28.0.5
 
 networks:
-  front_default:
+  hlf2:
     external: true

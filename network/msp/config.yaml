@@ -8,4 +8,4 @@ NodeOUs:
     OrganizationalUnitIdentifier: peer
   OrdererOUIdentifier:
     Certificate: cacerts/ca-482-solutions-7054.pem
-    OrganizationalUnitIdentifier: peer
+    OrganizationalUnitIdentifier: orderer
