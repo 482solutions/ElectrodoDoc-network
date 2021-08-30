@@ -125,7 +125,7 @@ echo "${yellow} -----10.Build orderer MSP----- ${reset}"
 
 cp -r ./tmp_data/msp ./network/orderer/orderer_data/
 mkdir -p ./network/orderer/orderer_data/msp/admincerts
-cp ./admin/msp/signcerts/cert.pem ./network/orderer/data/msp/admincerts/
+cp ./admin/msp/signcerts/cert.pem ./network/orderer/orderer_data/msp/admincerts/
 cp ./network/msp/config.yaml ./network/orderer/orderer_data/msp/
 # Change values in all Certificate fields of ./data/msp/config.yaml to the actual name of the certificate in ./data/msp/cacerts
 # Change orderer settings
