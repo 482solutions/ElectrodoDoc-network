@@ -21,7 +21,8 @@ echo "${yellow} -----2.Enroll admin msp----- ${reset}"
 while [ ! -f $(pwd)/network/ca/ca_data/tls-cert.pem ] 
 do
     sleep 1
-cdone
+    echo "awaiting file tls-cert.pem"
+done
 
 docker run --rm --network hlf2 --name fabric_ca_client \
 -e "FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server" \
