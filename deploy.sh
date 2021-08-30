@@ -12,9 +12,13 @@ reset=`tput sgr0`
 docker network rm hlf2
 docker network create --driver=bridge  --subnet=172.28.0.0/16  --ip-range=172.28.0.0/24   --gateway=172.28.0.254  hlf2
 
+
+
 echo "${yellow} -----1.Run Fabric CA Server----- ${reset}"
 
 docker-compose -f ./network/ca/ca_docker-compose.yaml up -d
+
+
 
 echo "${yellow} -----2.Enroll admin msp----- ${reset}"
 
@@ -27,8 +31,11 @@ done
 docker run --rm --network hlf2 --name fabric_ca_client \
 -e "FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server" \
 -e "FABRIC_CA_CLIENT_TLS_CERTFILES=/etc/hyperledger/fabric-ca-server/tls-cert.pem" \
--v $(pwd)/tmp_data:/etc/hyperledger/fabric-ca-server -v $(pwd)/network/ca/ca_data/tls-cert.pem:/etc/hyperledger/fabric-ca-server/tls-cert.pem hyperledger/fabric-ca:1.4 \
+-v $(pwd)/tmp_data:/etc/hyperledger/fabric-ca-server \
+-v $(pwd)/network/ca/ca_data/tls-cert.pem:/etc/hyperledger/fabric-ca-server/tls-cert.pem hyperledger/fabric-ca:1.4.9 \
 sh -c 'sleep 5 && fabric-ca-client enroll --url https://admin:password@ca.482.solutions:7054'
+
+
 
 echo "${yellow} -----3.Backup admin msp----- ${reset}"
 
@@ -36,12 +43,15 @@ mkdir -p ./admin/msp
 cp -r ./tmp_data/msp ./admin/ 
 cp ./tmp_data/tls-cert.pem ./admin/tls-cert.pem
 
+
+
 echo "${yellow} -----4.Register peer account----- ${reset}"
 
 docker run --rm --network hlf2 --name fabric_ca_client \
 -e "FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server" \
 -e "FABRIC_CA_CLIENT_TLS_CERTFILES=/etc/hyperledger/fabric-ca-server/ca-cert.pem" \
--v $(pwd)/tmp_data:/etc/hyperledger/fabric-ca-server hyperledger/fabric-ca:1.4 \
+-v $(pwd)/tmp_data:/etc/hyperledger/fabric-ca-server \
+-v $(pwd)/network/ca/ca_data/ca-cert.pem:/etc/hyperledger/fabric-ca-server/ca-cert.pem hyperledger/fabric-ca:1.4.9 \
 sh -c 'sleep 5 && fabric-ca-client register --id.name peer1 --id.affiliation 482solutions.prj-fabric --id.secret passwd --id.type peer'
 
 echo "${yellow} -----5.Enroll peer account----- ${reset}"
@@ -49,7 +59,8 @@ echo "${yellow} -----5.Enroll peer account----- ${reset}"
 docker run --rm --network hlf2 --name fabric_ca_client \
 -e "FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server" \
 -e "FABRIC_CA_CLIENT_TLS_CERTFILES=/etc/hyperledger/fabric-ca-server/ca-cert.pem" \
--v $(pwd)/tmp_data:/etc/hyperledger/fabric-ca-server hyperledger/fabric-ca:1.4 \
+-v $(pwd)/tmp_data:/etc/hyperledger/fabric-ca-server \
+-v $(pwd)/network/ca/ca_data/ca-cert.pem:/etc/hyperledger/fabric-ca-server/ca-cert.pem hyperledger/fabric-ca:1.4.9 \
 sh -c 'sleep 5 && fabric-ca-client enroll -u https://peer1:passwd@ca.482.solutions:7054'
 
 echo "${yellow} -----6.Build node MSP----- ${reset}"
@@ -88,13 +99,15 @@ echo "${yellow} -----8.Register orderer account----- ${reset}"
 docker run --rm --network hlf2 --name fabric_ca_client \
 -e "FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server" \
 -e "FABRIC_CA_CLIENT_TLS_CERTFILES=/etc/hyperledger/fabric-ca-server/tls-cert.pem" \
--v $(pwd)/tmp_data:/etc/hyperledger/fabric-ca-server -v $(pwd)/network/ca/ca_data/tls-cert.pem:/etc/hyperledger/fabric-ca-server/tls-cert.pem hyperledger/fabric-ca:1.4 \
+-v $(pwd)/tmp_data:/etc/hyperledger/fabric-ca-server \
+-v $(pwd)/network/ca/ca_data/tls-cert.pem:/etc/hyperledger/fabric-ca-server/tls-cert.pem hyperledger/fabric-ca:1.4 \
 sh -c 'sleep 5 && fabric-ca-client enroll --url https://admin:password@ca.482.solutions:7054'
 
 docker run --rm --network hlf2 --name fabric_ca_client \
 -e "FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server" \
 -e "FABRIC_CA_CLIENT_TLS_CERTFILES=/etc/hyperledger/fabric-ca-server/ca-cert.pem" \
--v $(pwd)/tmp_data:/etc/hyperledger/fabric-ca-server hyperledger/fabric-ca:1.4 \
+-v $(pwd)/tmp_data:/etc/hyperledger/fabric-ca-server \
+-v $(pwd)/network/ca/ca_data/ca-cert.pem:/etc/hyperledger/fabric-ca-server/ca-cert.pem hyperledger/fabric-ca:1.4.9 \
 sh -c 'sleep 5 && fabric-ca-client register --id.name orderer --id.affiliation 482solutions.prj-fabric --id.secret passwd --id.type orderer'
 
 
@@ -103,7 +116,8 @@ echo "${yellow} -----9.Enroll orderer account----- ${reset}"
 docker run --rm --network hlf2 --name fabric_ca_client \
 -e "FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server" \
 -e "FABRIC_CA_CLIENT_TLS_CERTFILES=/etc/hyperledger/fabric-ca-server/ca-cert.pem" \
--v $(pwd)/tmp_data:/etc/hyperledger/fabric-ca-server hyperledger/fabric-ca:1.4 \
+-v $(pwd)/tmp_data:/etc/hyperledger/fabric-ca-server \
+-v $(pwd)/network/ca/ca_data/ca-cert.pem:/etc/hyperledger/fabric-ca-server/ca-cert.pem hyperledger/fabric-ca:1.4.9 \
 sh -c 'sleep 5 && fabric-ca-client enroll -u https://orderer:passwd@ca.482.solutions:7054'
 
 
