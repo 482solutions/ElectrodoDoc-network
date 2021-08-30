@@ -16,7 +16,7 @@ services:
         ipv4_address: 172.28.0.2
 
   ca:
-    image: hyperledger/fabric-ca:1.4
+    image: hyperledger/fabric-ca:1.4.9
     container_name: ca.482.solutions
     depends_on:
       - db
