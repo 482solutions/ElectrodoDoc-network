@@ -11,8 +11,8 @@ services:
       - 7050:7050
     command: orderer
     networks:
-      front_default:
-         hlf2: 172.28.0.5
+      hlf2:
+         ipv4_address: 172.28.0.5
 
 networks:
   hlf2:
