@@ -92,6 +92,49 @@ cp ./admin_data/msp/signcerts/cert.pem ./network/orderer/orderer_data/msp/adminc
 # In Organizations[482solutions].AnchorPeers list the IP address of the previously created peer.
 # In Profiles.SampleSingleMSPSolo.Orderer.Addresses fill in the IP address of the orderer service.
 
+
+
+echo ----Change admin MSP
+
+### mkdir -p ./data/msp/admincerts
+### cp ./admin/msp/signcerts/cert.pem ./data/msp/admincerts
+
+cp -r ./network/orderer/orderer_data/msp/ ./network/ordererchannel/
+
+docker run --rm --network hlf2 --name cli \
+-e "GOPATH=/opt/gopath" \
+-e "CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock" \
+-e "FABRIC_CFG_PATH=/opt/gopath/src/github.com/hyperledger/fabric/network/ordererchannel" \
+-e "CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/network/ordererchannel/msp" \
+-v $(pwd)/network/ordererchannel:/opt/gopath/src/github.com/hyperledger/fabric/network/ordererchannel/ \
+-w="/opt/gopath/src/github.com/hyperledger/fabric/network/ordererchannel/" \
+hyperledger/fabric-tools:1.4 sh -c 'sleep 5 &&
+echo ----Build the channel creation transaction &&
+configtxgen -asOrg OrdererOrg -channelID ordererchannel -configPath $(pwd) -outputCreateChannelTx ./ordererchannel_create.pb -profile OrgOrdererGenesis'
+
+
+
+
+
+
+
+exit (0)
+
+docker run --rm --network hlf2 --name cli \
+-e "GOPATH=/opt/gopath" \
+-e "CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock" \
+-e "FABRIC_CFG_PATH=/opt/gopath/src/github.com/hyperledger/fabric/network/orderer/orderer_data" \
+-e "CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/network/ordererchannel/msp" \
+-v $(pwd)/network/orderer/orderer_data:/opt/gopath/src/github.com/hyperledger/fabric/network/orderer/orderer_data \
+-v $(pwd)/network/ordererchannel:/opt/gopath/src/github.com/hyperledger/fabric/network/ordererchannel/ \
+-v $(pwd)/orderer/orderer_data/msp:/opt/gopath/src/github.com/hyperledger/fabric/network/ordererchannel/msp \
+-w="/opt/gopath/src/github.com/hyperledger/fabric/network/ordererchannel/" \
+hyperledger/fabric-tools:1.4 sh -c 'sleep 5 && echo ----Create the channel &&
+peer channel create -c ordererchannel --file ./ordererchannel_create.pb --orderer 172.28.0.5:7050'
+
+
+
+
 echo "${yellow} -----7.Run Fabric Orderer Node----- ${reset}"
 
 docker-compose -f ./network/orderer/orderer_docker-compose.yaml up -d
@@ -100,6 +143,7 @@ docker-compose -f ./network/orderer/orderer_docker-compose.yaml up -d
 ### docker-compose up -d
 ### cd ../../
 
+exit (0)
 
 
 echo "${yellow} -----8.Register peer account----- ${reset}"

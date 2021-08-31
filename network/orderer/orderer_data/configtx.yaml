@@ -194,18 +194,18 @@ Profiles:
                               Type: Signature
                               Rule: "OR('482solutions.member')"
 
-###    OrgOrdererGenesis:
-###        <<: *ChannelDefaults
-###        Orderer:
-###            <<: *OrdererDefaults
-###            Organizations:
-###                - *OrdererOrg
-###            Capabilities:
-###                <<: *OrdererCapabilities
-###        Consortiums:
-###            SampleConsortium:
-###                Organizations:
-###                    - *482solutions
+    OrgOrdererGenesis:
+        <<: *ChannelDefaults
+        Orderer:
+            <<: *OrdererDefaults
+            Organizations:
+                - *OrdererOrg
+            Capabilities:
+                <<: *OrdererCapabilities
+        Consortiums:
+            SampleConsortium:
+                Organizations:
+                    - *482solutions
 ###
 ###
 ###    SampleSingleMSPSolo:
