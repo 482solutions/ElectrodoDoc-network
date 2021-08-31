@@ -117,27 +117,21 @@ docker run --rm --network hlf2 --name cli \
 -v $(pwd)/network/ordererchannel:/opt/gopath/src/github.com/hyperledger/fabric/network/ordererchannel/ \
 -w="/opt/gopath/src/github.com/hyperledger/fabric/network/ordererchannel/" \
 hyperledger/fabric-tools:1.4 sh -c 'sleep 5 &&
-echo ----Build the channel creation transaction && configtxgen -channelID ordererchannel   -outputBlock ordererchannel.block -profile OrgOrdererGenesis'
+echo ----Build the channel creation transaction && configtxgen -channelID ordererchannel -outputBlock ordererchannel.block -profile OrgOrdererGenesis'
 
 
 
-
-
-
-
-exit (0)
-
-docker run --rm --network hlf2 --name cli \
--e "GOPATH=/opt/gopath" \
--e "CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock" \
--e "FABRIC_CFG_PATH=/opt/gopath/src/github.com/hyperledger/fabric/network/orderer/orderer_data" \
--e "CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/network/ordererchannel/msp" \
--v $(pwd)/network/orderer/orderer_data:/opt/gopath/src/github.com/hyperledger/fabric/network/orderer/orderer_data \
--v $(pwd)/network/ordererchannel:/opt/gopath/src/github.com/hyperledger/fabric/network/ordererchannel/ \
--v $(pwd)/orderer/orderer_data/msp:/opt/gopath/src/github.com/hyperledger/fabric/network/ordererchannel/msp \
--w="/opt/gopath/src/github.com/hyperledger/fabric/network/ordererchannel/" \
-hyperledger/fabric-tools:1.4 sh -c 'sleep 5 && echo ----Create the channel &&
-peer channel create -c ordererchannel --file ./ordererchannel_create.pb --orderer 172.28.0.5:7050'
+### docker run --rm --network hlf2 --name cli \
+### -e "GOPATH=/opt/gopath" \
+### -e "CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock" \
+### -e "FABRIC_CFG_PATH=/opt/gopath/src/github.com/hyperledger/fabric/network/orderer/orderer_data" \
+### -e "CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/network/ordererchannel/msp" \
+### -v $(pwd)/network/orderer/orderer_data:/opt/gopath/src/github.com/hyperledger/fabric/network/orderer/### orderer_data \
+### -v $(pwd)/network/ordererchannel:/opt/gopath/src/github.com/hyperledger/fabric/network/ordererchannel/ \
+### -v $(pwd)/orderer/orderer_data/msp:/opt/gopath/src/github.com/hyperledger/fabric/network/ordererchannel/msp \
+### -w="/opt/gopath/src/github.com/hyperledger/fabric/network/ordererchannel/" \
+### hyperledger/fabric-tools:1.4 sh -c 'sleep 5 && echo ----Create the channel &&
+### peer channel create -c ordererchannel --file ./ordererchannel_create.pb --orderer 172.28.0.5:7050'
 
 
 
