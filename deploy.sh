@@ -99,7 +99,15 @@ echo ----Change admin MSP
 ### mkdir -p ./data/msp/admincerts
 ### cp ./admin/msp/signcerts/cert.pem ./data/msp/admincerts
 
-cp -r ./network/orderer/orderer_data/msp/ ./network/ordererchannel/
+### cp -r ./network/orderer/orderer_data/msp/ ./network/ordererchannel/msp
+
+# mkdir -p network/ordererchannel/OrdererOrg/msp
+# mkdir -p network/ordererchannel/482solutionsMSP/msp
+#cp  /home/andrii/woden-network/network/ca/ca_data/ca-cert.pem ./network/ordererchannel/orderer/msp/cacerts
+cp  /home/andrii/woden-network/network/ca/ca_data/ca-cert.pem  network/ordererchannel/OrdererOrg/msp
+# mkdir -p ./network/ordererchannel/peer/msp/cacerts
+# cp  /home/andrii/woden-network/network/ca/ca_data/ca-cert.pem ./network/ordererchannel/peer/msp/cacerts
+cp  /home/andrii/woden-network/network/ca/ca_data/ca-cert.pem  network/ordererchannel/482solutionsMSP/msp
 
 docker run --rm --network hlf2 --name cli \
 -e "GOPATH=/opt/gopath" \
@@ -109,8 +117,7 @@ docker run --rm --network hlf2 --name cli \
 -v $(pwd)/network/ordererchannel:/opt/gopath/src/github.com/hyperledger/fabric/network/ordererchannel/ \
 -w="/opt/gopath/src/github.com/hyperledger/fabric/network/ordererchannel/" \
 hyperledger/fabric-tools:1.4 sh -c 'sleep 5 &&
-echo ----Build the channel creation transaction &&
-configtxgen -asOrg OrdererOrg -channelID ordererchannel -configPath $(pwd) -outputCreateChannelTx ./ordererchannel_create.pb -profile OrgOrdererGenesis'
+echo ----Build the channel creation transaction && configtxgen -channelID ordererchannel   -outputBlock ordererchannel.block -profile OrgOrdererGenesis'
 
 
 
