@@ -9,3 +9,6 @@ NodeOUs:
   OrdererOUIdentifier:
     Certificate: cacerts/ca-482-solutions-7054.pem
     OrganizationalUnitIdentifier: orderer
+  AdminOUIdentifier:
+    Certificate: cacerts/ca-482-solutions-7054.pem
+    OrganizationalUnitIdentifier: admin

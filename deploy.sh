@@ -80,22 +80,21 @@ docker run --rm --network hlf2 --name fabric_ca_client \
 sh -c 'sleep 5 && fabric-ca-client enroll -u https://orderer:passwd@ca.482.solutions:7054'
 
 
-exit (0)
 
 
-docker run --rm --network hlf2 --name fabric_ca_client \
--e "FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server" \
--e "FABRIC_CA_CLIENT_TLS_CERTFILES=/etc/hyperledger/fabric-ca-server/ca-cert.pem" \
--v $(pwd)/network/orderer/orderer_data:/etc/hyperledger/fabric-ca-server \
--v $(pwd)/network/ca/ca_data/ca-cert.pem:/etc/hyperledger/fabric-ca-server/ca-cert.pem hyperledger/fabric-ca:1.4.9 \
-sh -c 'sleep 3 && fabric-ca-client enroll -u https://orderer:passwd@ca.482.solutions:7054 -M ${PWD}/tls --enrollment.profile tls'
+# docker run --rm --network hlf2 --name fabric_ca_client \
+# -e "FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server" \
+# -e "FABRIC_CA_CLIENT_TLS_CERTFILES=/etc/hyperledger/fabric-ca-server/ca-cert.pem" \
+# -v $(pwd)/network/orderer/orderer_data:/etc/hyperledger/fabric-ca-server \
+# -v $(pwd)/network/ca/ca_data/ca-cert.pem:/etc/hyperledger/fabric-ca-server/ca-cert.pem hyperledger/fabric-ca:1.4.9 \
+# sh -c 'sleep 3 && fabric-ca-client enroll -u https://orderer:passwd@ca.482.solutions:7054 -M ${PWD}/tls --enrollment.profile tls'
 
 
 echo "${yellow} -----6.Build orderer MSP----- ${reset}"
 
 ### cp -r ./tmp_data/msp ./network/orderer/orderer_data/
 mkdir -p ./network/orderer/orderer_data/msp/admincerts
-cp ./admin_data/msp/signcerts/cert.pem ./network/orderer/orderer_data/msp/admincerts/
+cp --verbose ./admin_data/msp/signcerts/cert.pem ./network/orderer/orderer_data/msp/admincerts/
 ### cp ./network/msp/config.yaml ./network/orderer/orderer_data/msp/
 # Change values in all Certificate fields of ./data/msp/config.yaml to the actual name of the certificate in ./data/msp/cacerts
 # Change orderer settings
@@ -120,6 +119,13 @@ cp --verbose ./network/ca/ca_data/ca-cert.pem  ./network/ordererchannel/orderer/
 # cp  /home/andrii/woden-network/network/ca/ca_data/ca-cert.pem ./network/ordererchannel/peer/msp/cacerts
 cp --verbose ./network/ca/ca_data/ca-cert.pem  ./network/ordererchannel/peer/msp/cacerts
 
+mkdir -p ./network/ordererchannel/peer/msp/admincerts
+cp --verbose ./admin_data/msp/signcerts/cert.pem ./network/ordererchannel/peer/msp/admincerts/
+
+mkdir -p ./network/ordererchannel/orderer/msp/admincerts
+cp --verbose ./admin_data/msp/signcerts/cert.pem ./network/ordererchannel/orderer/msp/admincerts/
+
+
 docker run --rm --network hlf2 --name cli \
 -e "GOPATH=/opt/gopath" \
 -e "CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock" \
@@ -127,45 +133,44 @@ docker run --rm --network hlf2 --name cli \
 -e "CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/network/ordererchannel/msp" \
 -v $(pwd)/network/ordererchannel:/opt/gopath/src/github.com/hyperledger/fabric/network/ordererchannel/ \
 -w="/opt/gopath/src/github.com/hyperledger/fabric/network/ordererchannel/" \
-hyperledger/fabric-tools:1.4 sh -c 'sleep 5 &&
-echo ----Build the channel creation transaction && configtxgen -channelID ordererchannel -outputBlock ordererchannel.block -profile OrgOrdererGenesis'
+hyperledger/fabric-tools:1.4 sh -c 'sleep 5 && echo ----Build the channel creation transaction && configtxgen -channelID ordererchannel -outputBlock ordererchannel.block -profile OrgOrdererGenesis'
 
 ###########
-services:
+# services:
 
 
-    environment:
-      - FABRIC_LOGGING_SPEC=INFO
-      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
-      - ORDERER_GENERAL_LISTENPORT=7050
-      - ORDERER_GENERAL_GENESISMETHOD=file
-      - ORDERER_GENERAL_GENESISFILE=/var/hyperledger/orderer/orderer.genesis.block
-      - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
-      - ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp
-      #- ORDERER_OPERATIONS_LISTENADDRESS=0.0.0.0:17050
-      # enabled TLS
-      - ORDERER_GENERAL_TLS_ENABLED=true
-      - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
-      - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
-      - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
-      - ORDERER_KAFKA_TOPIC_REPLICATIONFACTOR=1
-      - ORDERER_KAFKA_VERBOSE=true
+#     environment:
+#       - FABRIC_LOGGING_SPEC=INFO
+#       - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+#       - ORDERER_GENERAL_LISTENPORT=7050
+#       - ORDERER_GENERAL_GENESISMETHOD=file
+#       - ORDERER_GENERAL_GENESISFILE=/var/hyperledger/orderer/orderer.genesis.block
+#       - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
+#       - ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp
+#       #- ORDERER_OPERATIONS_LISTENADDRESS=0.0.0.0:17050
+#       # enabled TLS
+#       - ORDERER_GENERAL_TLS_ENABLED=true
+#       - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+#       - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+#       - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+#       - ORDERER_KAFKA_TOPIC_REPLICATIONFACTOR=1
+#       - ORDERER_KAFKA_VERBOSE=true
 
-      - ORDERER_GENERAL_CLUSTER_CLIENTCERTIFICATE=/var/hyperledger/orderer/tls/server.crt
-      - ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY=/var/hyperledger/orderer/tls/server.key
-      - ORDERER_GENERAL_CLUSTER_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
-    working_dir: /opt/gopath/src/github.com/hyperledger/fabric
-    command: orderer
-    volumes:
-        - ../system-genesis-block/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
-        - ../organizations/ordererOrganizations/example.com/orderers/orderer.example.com/msp:/var/hyperledger/orderer/msp
-        - ../organizations/ordererOrganizations/example.com/orderers/orderer.example.com/tls/:/var/hyperledger/orderer/tls
-        - orderer.example.com:/var/hyperledger/production/orderer
-    ports:
-      - 7050:7050
-      - 17050:17050
-    networks:
-      - test
+#       - ORDERER_GENERAL_CLUSTER_CLIENTCERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+#       - ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+#       - ORDERER_GENERAL_CLUSTER_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+#     working_dir: /opt/gopath/src/github.com/hyperledger/fabric
+#     command: orderer
+#     volumes:
+#         - ../system-genesis-block/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+#         - ../organizations/ordererOrganizations/example.com/orderers/orderer.example.com/msp:/var/hyperledger/orderer/msp
+#         - ../organizations/ordererOrganizations/example.com/orderers/orderer.example.com/tls/:/var/hyperledger/orderer/tls
+#         - orderer.example.com:/var/hyperledger/production/orderer
+#     ports:
+#       - 7050:7050
+#       - 17050:17050
+#     networks:
+#       - test
     #######
 
 
@@ -187,10 +192,10 @@ echo "${yellow} -----7.Run Fabric Orderer Node----- ${reset}"
 mkdir -p ./network/ordererchannel/orderer/msp/admincerts
 cp ./admin_data/msp/signcerts/cert.pem ./network/ordererchannel/orderer/msp/admincerts
 
-mkdir -p ./network/ordererchannel/peeer/msp/admincerts
+mkdir -p ./network/ordererchannel/peer/msp/admincerts
 cp ./admin_data/msp/signcerts/cert.pem ./network/ordererchannel/peer/msp/admincerts
 
-mkdir -p ./network/ordererchannel/peeer/msp/cacerts
+mkdir -p ./network/ordererchannel/peer/msp/cacerts
 cp -r ./network/orderer/orderer_data/msp/cacerts ./network/ordererchannel/peer/msp/
 
 mkdir -p ./network/ordererchannel/orderer/msp/cacerts
@@ -203,7 +208,6 @@ docker-compose -f ./network/orderer/orderer_docker-compose.yaml up -d
 ### cd ../../
 
 
-exit (0)
 
 
 echo "${yellow} -----8.Register peer account----- ${reset}"
@@ -229,6 +233,10 @@ echo "${yellow} -----10.Build node MSP----- ${reset}"
 # cp -r ./tmp_data/msp ./network/peer/peer_data/
 mkdir -p ./network/peer/peer_data/msp/admincerts
 cp ./admin_data/msp/signcerts/cert.pem ./network/peer/peer_data/msp/admincerts/
+
+mkdir -p ./network/peer/peer_data/msp/cacerts
+#cp  /home/andrii/woden-network/network/ca/ca_data/ca-cert.pem ./network/ordererchannel/orderer/msp/cacerts
+cp --verbose ./network/ca/ca_data/ca-cert.pem  ./network/peer/peer_data/msp/cacerts
 ### cp ./network/msp/config.yaml ./network/peer/peer_data/msp/
 
 #####END Refactored section#####

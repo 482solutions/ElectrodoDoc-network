@@ -4,6 +4,8 @@ services:
   orderer:
     image: hyperledger/fabric-peer:2.2.3
     container_name: peer.482.solutions
+    environment:
+      - FABRIC_CA_CLIENT_TLS_CERTFILES=cacerts/ca-cert.pem
     working_dir: /etc/hyperledger/fabric
     volumes:
       - ./peer_data:/etc/hyperledger/fabric

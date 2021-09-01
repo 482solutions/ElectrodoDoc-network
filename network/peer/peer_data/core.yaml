@@ -225,25 +225,25 @@ peer:
     # not mutual TLS auth. See comments on chaincodeListenAddress for more info
     tls:
         # Require server-side TLS
-        enabled:  true
+        enabled:  false
         # Require client certificates / mutual TLS.
         # Note that clients that are not configured to use a certificate will
         # fail to connect to the peer.
         clientAuthRequired: false
         # X.509 certificate used for TLS server
         cert:
-            file: tls/server.crt
+            #file: tls/server.crt
         # Private key used for TLS server (and client if clientAuthEnabled
         # is set to true
         key:
-            file: tls/server.key
+            #file: tls/server.key
         # Trusted root certificate chain for tls.cert
         rootcert:
-            file: tls/ca.crt
+            #file: tls/ca.crt
         # Set of root certificate authorities used to verify client certificates
         clientRootCAs:
             files:
-              - tls/ca.crt
+             # - tls/ca.crt
         # Private key used for TLS when making client connections.  If
         # not set, peer.tls.key.file will be used instead
         clientKey:
@@ -430,13 +430,13 @@ vm:
     # settings for docker vms
     docker:
         tls:
-            enabled: true
+            enabled: false
             ca:
-                file: docker/ca.crt
+                #file: docker/ca.crt
             cert:
-                file: docker/tls.crt
+                #file: docker/tls.crt
             key:
-                file: docker/tls.key
+                #file: docker/tls.key
 
         # Enables/disables the standard out/err from chaincode containers for
         # debugging purposes
@@ -669,7 +669,7 @@ operations:
 ###############################################################################
 metrics:
     # metrics provider is one of statsd, prometheus, or disabled
-    provider: enabled
+    provider: prometeus
 
     # statsd configuration
     statsd:
