@@ -1,0 +1,18 @@
+NodeOUs:
+  Enable: false
+  ClientOUIdentifier:
+    Certificate: cacerts/172-28-0-3-7054.pem 
+    #cacerts/ca-482-solutions-7054.pem
+    OrganizationalUnitIdentifier: client
+  PeerOUIdentifier:
+    Certificate: cacerts/172-28-0-3-7054.pem 
+    #cacerts/ca-482-solutions-7054.pem
+    OrganizationalUnitIdentifier: peer
+  OrdererOUIdentifier:
+    Certificate: cacerts/172-28-0-3-7054.pem 
+    #cacerts/ca-482-solutions-7054.pem
+    OrganizationalUnitIdentifier: orderer
+  AdminOUIdentifier:
+    Certificate: cacerts/172-28-0-3-7054.pem 
+    #cacerts/ca-482-solutions-7054.pem
+    OrganizationalUnitIdentifier: admin

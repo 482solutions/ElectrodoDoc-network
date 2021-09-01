@@ -80,6 +80,17 @@ docker run --rm --network hlf2 --name fabric_ca_client \
 sh -c 'sleep 5 && fabric-ca-client enroll -u https://orderer:passwd@ca.482.solutions:7054'
 
 
+exit (0)
+
+
+docker run --rm --network hlf2 --name fabric_ca_client \
+-e "FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server" \
+-e "FABRIC_CA_CLIENT_TLS_CERTFILES=/etc/hyperledger/fabric-ca-server/ca-cert.pem" \
+-v $(pwd)/network/orderer/orderer_data:/etc/hyperledger/fabric-ca-server \
+-v $(pwd)/network/ca/ca_data/ca-cert.pem:/etc/hyperledger/fabric-ca-server/ca-cert.pem hyperledger/fabric-ca:1.4.9 \
+sh -c 'sleep 3 && fabric-ca-client enroll -u https://orderer:passwd@ca.482.solutions:7054 -M ${PWD}/tls --enrollment.profile tls'
+
+
 echo "${yellow} -----6.Build orderer MSP----- ${reset}"
 
 ### cp -r ./tmp_data/msp ./network/orderer/orderer_data/
@@ -101,13 +112,13 @@ echo ----Change admin MSP
 
 ### cp -r ./network/orderer/orderer_data/msp/ ./network/ordererchannel/msp
 
-# mkdir -p network/ordererchannel/OrdererOrg/msp
-# mkdir -p network/ordererchannel/482solutionsMSP/msp
+mkdir -p ./network/ordererchannel/orderer/msp/cacerts
+mkdir -p ./network/ordererchannel/peer/msp/cacerts
 #cp  /home/andrii/woden-network/network/ca/ca_data/ca-cert.pem ./network/ordererchannel/orderer/msp/cacerts
-cp  /home/andrii/woden-network/network/ca/ca_data/ca-cert.pem  network/ordererchannel/OrdererOrg/msp
+cp --verbose ./network/ca/ca_data/ca-cert.pem  ./network/ordererchannel/orderer/msp/cacerts
 # mkdir -p ./network/ordererchannel/peer/msp/cacerts
 # cp  /home/andrii/woden-network/network/ca/ca_data/ca-cert.pem ./network/ordererchannel/peer/msp/cacerts
-cp  /home/andrii/woden-network/network/ca/ca_data/ca-cert.pem  network/ordererchannel/482solutionsMSP/msp
+cp --verbose ./network/ca/ca_data/ca-cert.pem  ./network/ordererchannel/peer/msp/cacerts
 
 docker run --rm --network hlf2 --name cli \
 -e "GOPATH=/opt/gopath" \
@@ -119,30 +130,78 @@ docker run --rm --network hlf2 --name cli \
 hyperledger/fabric-tools:1.4 sh -c 'sleep 5 &&
 echo ----Build the channel creation transaction && configtxgen -channelID ordererchannel -outputBlock ordererchannel.block -profile OrgOrdererGenesis'
 
+###########
+services:
+
+
+    environment:
+      - FABRIC_LOGGING_SPEC=INFO
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_LISTENPORT=7050
+      - ORDERER_GENERAL_GENESISMETHOD=file
+      - ORDERER_GENERAL_GENESISFILE=/var/hyperledger/orderer/orderer.genesis.block
+      - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
+      - ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp
+      #- ORDERER_OPERATIONS_LISTENADDRESS=0.0.0.0:17050
+      # enabled TLS
+      - ORDERER_GENERAL_TLS_ENABLED=true
+      - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      - ORDERER_KAFKA_TOPIC_REPLICATIONFACTOR=1
+      - ORDERER_KAFKA_VERBOSE=true
+
+      - ORDERER_GENERAL_CLUSTER_CLIENTCERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_GENERAL_CLUSTER_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric
+    command: orderer
+    volumes:
+        - ../system-genesis-block/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+        - ../organizations/ordererOrganizations/example.com/orderers/orderer.example.com/msp:/var/hyperledger/orderer/msp
+        - ../organizations/ordererOrganizations/example.com/orderers/orderer.example.com/tls/:/var/hyperledger/orderer/tls
+        - orderer.example.com:/var/hyperledger/production/orderer
+    ports:
+      - 7050:7050
+      - 17050:17050
+    networks:
+      - test
+    #######
 
 
 ### docker run --rm --network hlf2 --name cli \
 ### -e "GOPATH=/opt/gopath" \
 ### -e "CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock" \
-### -e "FABRIC_CFG_PATH=/opt/gopath/src/github.com/hyperledger/fabric/network/orderer/orderer_data" \
-### -e "CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/network/ordererchannel/msp" \
-### -v $(pwd)/network/orderer/orderer_data:/opt/gopath/src/github.com/hyperledger/fabric/network/orderer/### orderer_data \
+### -e "FABRIC_CFG_PATH=/opt/gopath/src/github.com/hyperledger/fabric/network/ordererchannel" \
+### -e "CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/network/ordererchannel/peer/msp" \
 ### -v $(pwd)/network/ordererchannel:/opt/gopath/src/github.com/hyperledger/fabric/network/ordererchannel/ \
-### -v $(pwd)/orderer/orderer_data/msp:/opt/gopath/src/github.com/hyperledger/fabric/network/ordererchannel/msp \
 ### -w="/opt/gopath/src/github.com/hyperledger/fabric/network/ordererchannel/" \
 ### hyperledger/fabric-tools:1.4 sh -c 'sleep 5 && echo ----Create the channel &&
-### peer channel create -c ordererchannel --file ./ordererchannel_create.pb --orderer 172.28.0.5:7050'
+### peer channel create -c ordererchannel --file ./ordererchannel.block  --orderer 172.28.0.5:7050'
 
 
 
 
 echo "${yellow} -----7.Run Fabric Orderer Node----- ${reset}"
 
+mkdir -p ./network/ordererchannel/orderer/msp/admincerts
+cp ./admin_data/msp/signcerts/cert.pem ./network/ordererchannel/orderer/msp/admincerts
+
+mkdir -p ./network/ordererchannel/peeer/msp/admincerts
+cp ./admin_data/msp/signcerts/cert.pem ./network/ordererchannel/peer/msp/admincerts
+
+mkdir -p ./network/ordererchannel/peeer/msp/cacerts
+cp -r ./network/orderer/orderer_data/msp/cacerts ./network/ordererchannel/peer/msp/
+
+mkdir -p ./network/ordererchannel/orderer/msp/cacerts
+cp -r ./network/orderer/orderer_data/msp/cacerts ./network/ordererchannel/orderer/msp/
+
 docker-compose -f ./network/orderer/orderer_docker-compose.yaml up -d
 ### 
 ### cd ./network/orderer
 ### docker-compose up -d
 ### cd ../../
+
 
 exit (0)
 
