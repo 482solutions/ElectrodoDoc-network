@@ -5,23 +5,12 @@ services:
     image: hyperledger/fabric-orderer:2.2.3
     container_name: orderer.482.solutions
     environment:
-      - FABRIC_LOGGING_SPEC=INFO
-      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
-      - ORDERER_GENERAL_LISTENPORT=7050
-      - ORDERER_GENERAL_GENESISMETHOD=file
-      - ORDERER_GENERAL_BOOTSTRAPFILE=/var/hyperledger/orderer/ordererchannel/ordererchannel.block
-      - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
-      - ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp
-     # - ORDERER_GENERAL_TLS_ENABLED=true
-     # - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
-     # - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
-     # - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
-    working_dir: /opt/gopath/src/github.com/hyperledger/fabric
+      - FABRIC_LOGGING_SPEC=DEBUG
+    # working_dir: /etc/hyperledger/fabric
     volumes:
-      - ./orderer_data/msp:/var/hyperledger/orderer/msp
-     # - ./orderer_data/tls/:/var/hyperledger/orderer/tls
-      - ./orderer_data:/var/hyperledger/production/orderer
-      - ../ordererchannel/ordererchannel.block:/var/hyperledger/orderer/ordererchannel/ordererchannel.block
+      - ./orderer_data/:/etc/hyperledger/fabric/
+      - ./orderer_data/production:/etc/hyperledger/fabric/production/
+      - ../ordererchannel/ordererchannel.block:/etc/hyperledger/ordererchannel.block
     ports:
       - 7050:7050
     command: orderer

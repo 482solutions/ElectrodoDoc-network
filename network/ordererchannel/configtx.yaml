@@ -1,16 +1,9 @@
-# Copyright IBM Corp. All Rights Reserved.
-#
-# SPDX-License-Identifier: Apache-2.0
-#
-
 ---
-
-
 Organizations:
     - &OrdererOrg
         Name: OrdererOrg
         ID: OrdererMSP
-        MSPDir: orderer/msp
+        MSPDir: ./orderer/msp
         Policies:
             Readers:
                 Type: Signature
@@ -26,7 +19,7 @@ Organizations:
     - &482solutions
         Name: 482solutionsMSP
         ID: 482solutionsMSP
-        MSPDir: peer/msp
+        MSPDir: ./peer/msp
         Policies: &482solutionsPolicies
             Readers:
                 Type: Signature
@@ -49,46 +42,6 @@ Capabilities:
         V2_0: true
     Application: &ApplicationCapabilities
         V2_0: true
-
-
-Application: &ApplicationDefaults
-    ACLs: &ACLsDefault
-        lscc/ChaincodeExists: /Channel/Application/Readers
-        lscc/GetDeploymentSpec: /Channel/Application/Readers
-        lscc/GetChaincodeData: /Channel/Application/Readers
-        lscc/GetInstantiatedChaincodes: /Channel/Application/Readers
-        qscc/GetChainInfo: /Channel/Application/Readers
-        qscc/GetBlockByNumber: /Channel/Application/Readers
-        qscc/GetBlockByHash: /Channel/Application/Readers
-        qscc/GetTransactionByID: /Channel/Application/Readers
-        qscc/GetBlockByTxID: /Channel/Application/Readers
-        cscc/GetConfigBlock: /Channel/Application/Readers
-        cscc/GetConfigTree: /Channel/Application/Readers
-        cscc/SimulateConfigTreeUpdate: /Channel/Application/Readers
-        peer/Propose: /Channel/Application/Writers
-        peer/ChaincodeToChaincode: /Channel/Application/Readers
-        event/Block: /Channel/Application/Readers
-        event/FilteredBlock: /Channel/Application/Readers
-    Organizations:
-    Policies: 
-    ### &ApplicationDefaultPolicies
-        Readers:
-            Type: ImplicitMeta
-            Rule: "ANY Readers"
-        Writers:
-            Type: ImplicitMeta
-            Rule: "ANY Writers"
-        Admins:
-            Type: ImplicitMeta
-            Rule: "MAJORITY Admins"
-        LifecycleEndorsement:
-            Type: ImplicitMeta
-            Rule: "MAJORITY Endorsement"
-        Endorsement:
-            Type: ImplicitMeta
-            Rule: "MAJORITY Endorsement"
-    Capabilities:
-        <<: *ApplicationCapabilities
 
 
 ### Orderer: &OrdererDefaults
@@ -147,6 +100,7 @@ Orderer: &OrdererDefaults
             Rule: "ANY Writers"
     Capabilities:
         <<: *OrdererCapabilities
+        
 Channel: &ChannelDefaults
     Policies:
         Readers:
@@ -163,37 +117,6 @@ Channel: &ChannelDefaults
 
 
 Profiles:
-    SampleDevModeEtcdRaft:
-        <<: *ChannelDefaults
-        Orderer:
-            <<: *OrdererDefaults
-            OrdererType: etcdraft
-            Organizations:
-                - <<: *482solutions
-                  Policies:
-                      <<: *482solutionsPolicies
-                      Admins:
-                          Type: Signature
-                          Rule: "OR('482solutions.member')"
-        Application:
-            <<: *ApplicationDefaults
-            Organizations:
-                - <<: *482solutions
-                  Policies:
-                      <<: *482solutionsPolicies
-                      Admins:
-                          Type: Signature
-                          Rule: "OR('482solutions.member')"
-        Consortiums:
-            SampleConsortium:
-                Organizations:
-                    - <<: *482solutions
-                      Policies:
-                          <<: *482solutionsPolicies
-                          Admins:
-                              Type: Signature
-                              Rule: "OR('482solutions.member')"
-
     OrgOrdererGenesis:
         <<: *ChannelDefaults
         Orderer:

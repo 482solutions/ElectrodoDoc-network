@@ -20,7 +20,7 @@ Organizations:
         ID: 482solutions
 
         # MSPDir is the filesystem path which contains the MSP configuration.
-        MSPDir: msp
+        MSPDir: /opt/gopath/src/github.com/hyperledger/fabric/msp
 
         # Policies defines the set of policies at this level of the config tree
         # For organization policies, their canonical path is usually
@@ -39,7 +39,7 @@ Organizations:
         # OrdererEndpoints is a list of all orderers this org runs which clients
         # and peers may to connect to to push transactions and receive blocks respectively.
         OrdererEndpoints:
-            - "157.230.99.123:7050"
+            - "orderer.482.solutions:7050"
 
         # AnchorPeers defines the location of peers which can be used for
         # cross-org gossip communication. Note, this value is only encoded in
@@ -91,3 +91,4 @@ Profiles:
                 - *482solutions
             Capabilities:
                 <<: *ApplicationCapabilities
+
