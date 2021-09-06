@@ -16,8 +16,8 @@ Organizations:
                 Rule: "OR('OrdererMSP.admin')"
         OrdererEndpoints:
             - orderer.482.solutions:7050
-    - &482solutions
-        Name: 482solutionsMSP
+    - &482solutionsOrg
+        Name: 482solutionsOrg
         ID: 482solutionsMSP
         MSPDir: ./peer/msp
         Policies: &482solutionsPolicies
@@ -29,7 +29,7 @@ Organizations:
                 Rule: "OR('482solutionsMSP.client', '482solutionsMSP.admin')"
             Admins:
                 Type: Signature
-                Rule: "OR('482solutionsMSP.admin')"            
+                Rule: "OR('482solutionsMSP.client', '482solutionsMSP.peer', '482solutionsMSP.admin')"        
             Endorsement:
                 Type: Signature
                 Rule: "OR('482solutionsMSP.peer')"
@@ -111,9 +111,37 @@ Channel: &ChannelDefaults
             Rule: "ANY Writers"
         Admins:
             Type: ImplicitMeta
-            Rule: "MAJORITY Admins"
+            Rule: "ANY Admins"
     Capabilities:
         <<: *ChannelCapabilities
+
+
+Application: &ApplicationDefaults
+    Policies: &ApplicationPolicies
+        Readers:
+            Type: ImplicitMeta
+            Rule: "ANY Readers"
+        Writers:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+        Admins:
+            Type: ImplicitMeta
+            Rule: "ANY Admins"
+        LifecycleEndorsement:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Endorsement"
+        Endorsement:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Endorsement"
+
+    Capabilities:
+        <<: *ApplicationCapabilities
+    Organizations:
+
+
+# Capabilities:
+#     Application: &ApplicationCapabilities
+#         V2_0: true
 
 
 Profiles:
@@ -128,7 +156,21 @@ Profiles:
         Consortiums:
             SampleConsortium:
                 Organizations:
-                    - *482solutions
+                    - *482solutionsOrg
+    TestChannel:
+        Consortium: SampleConsortium
+        <<: *ChannelDefaults
+        Application:
+            <<: *ApplicationDefaults
+            Organizations:
+                - *482solutionsOrg
+            Capabilities:
+                <<: *ApplicationCapabilities
+            Policies:
+                <<: *ApplicationPolicies
+                Admins:
+                    Type: Signature
+                    Rule: "OR('482solutionsOrg.member')"
 ###
 ###
 ###    SampleSingleMSPSolo:

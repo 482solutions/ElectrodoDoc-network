@@ -1,64 +1,91 @@
-################################################################################
-#
-#   ORGANIZATIONS
-#
-#   This section defines the organizational identities that can be referenced
-#   in the configuration profiles.
-#
-################################################################################
+---
 Organizations:
-    # 482solutions defines an MSP using the sampleconfig. It should never be used
-    # in production but may be used as a template for other definitions.
-    - &482solutions
-        # Name is the key by which this org will be referenced in channel
-        # configuration transactions.
-        # Name can include alphanumeric characters as well as dots and dashes.
-        Name: 482solutions
-
-        # ID is the key by which this org's MSP definition will be referenced.
-        # ID can include alphanumeric characters as well as dots and dashes.
-        ID: 482solutions
-
-        # MSPDir is the filesystem path which contains the MSP configuration.
-        MSPDir: /opt/gopath/src/github.com/hyperledger/fabric/msp
-
-        # Policies defines the set of policies at this level of the config tree
-        # For organization policies, their canonical path is usually
-        #   /Channel/<Application|Orderer>/<OrgName>/<PolicyName>
+    - &OrdererOrg
+        Name: OrdererOrg
+        ID: OrdererMSP
+        MSPDir: ./orderer/msp
+        Policies:
+            Readers:
+                Type: Signature
+                Rule: "OR('OrdererMSP.member')"
+            Writers:
+                Type: Signature
+                Rule: "OR('OrdererMSP.member')"
+            Admins:
+                Type: Signature
+                Rule: "OR('OrdererMSP.admin')"
+        OrdererEndpoints:
+            - orderer.482.solutions:7050
+    - &482solutionsOrg
+        Name: 482solutionsOrg
+        ID: 482solutionsMSP
+        MSPDir: ./msp
         Policies: &482solutionsPolicies
             Readers:
                 Type: Signature
-                Rule: "OR('482solutions.client', '482solutions.admin', '482solutions.peer')"
+                Rule: "OR('482solutionsMSP.client', '482solutionsMSP.peer', '482solutionsMSP.admin')"
             Writers:
                 Type: Signature
-                Rule: "OR('482solutions.client', '482solutions.admin', '482solutions.peer')"
+                Rule: "OR('482solutionsMSP.client', '482solutionsMSP.admin')"
             Admins:
                 Type: Signature
-                Rule: "OR('482solutions.admin')"
-
-        # OrdererEndpoints is a list of all orderers this org runs which clients
-        # and peers may to connect to to push transactions and receive blocks respectively.
-        OrdererEndpoints:
-            - "orderer.482.solutions:7050"
-
-        # AnchorPeers defines the location of peers which can be used for
-        # cross-org gossip communication. Note, this value is only encoded in
-        # the genesis block in the Application section context.
-        AnchorPeers:
+                Rule: "OR('482solutionsMSP.admin')"        
+            Endorsement:
+                Type: Signature
+                Rule: "OR('482solutionsMSP.peer')"
 
 
-################################################################################
-#
-#   SECTION: Application
-#
-#   - This section defines the values to encode into a config transaction or
-#   genesis block for application related parameters
-#
-################################################################################
-Application: &ApplicationDefaults
-        # Organizations is the list of orgs which are defined as participants on
-        # the application side of the network
-    Policies: &ApplicationDefaultPolicies
+Capabilities:
+    Channel: &ChannelCapabilities
+        V2_0: true
+    Orderer: &OrdererCapabilities
+        V2_0: true
+    Application: &ApplicationCapabilities
+        V2_0: true
+
+
+### Orderer: &OrdererDefaults
+###     OrdererType: etcdraft
+###     Addresses:
+###         - orderer.482.solutions:7050
+###     EtcdRaft:
+###         Consenters:
+###         - Host: orderer.482.solutions
+###           Port: 7050
+###           ClientTLSCert: ../organizations/ordererOrganizations/example.com/orderers/orderer.example.com/tls/server.crt
+###           ServerTLSCert: ../organizations/ordererOrganizations/example.com/orderers/orderer.example.com/tls/server.crt
+###     BatchTimeout: 2s
+###     BatchSize:
+###         MaxMessageCount: 10
+###         AbsoluteMaxBytes: 99 MB
+###         PreferredMaxBytes: 512 KB
+###     Organizations:
+###     Policies:
+###         Readers:
+###             Type: ImplicitMeta
+###             Rule: "ANY Readers"
+###         Writers:
+###             Type: ImplicitMeta
+###             Rule: "ANY Writers"
+###         Admins:
+###             Type: ImplicitMeta
+###             Rule: "MAJORITY Admins"
+###         BlockValidation:
+###             Type: ImplicitMeta
+###             Rule: "ANY Writers"
+### 
+
+Orderer: &OrdererDefaults
+    OrdererType: solo
+    Addresses:
+    BatchTimeout: 400ms
+    BatchSize:
+        MaxMessageCount: 50
+        AbsoluteMaxBytes: 1 MB
+        PreferredMaxBytes: 1 MB
+    MaxChannels: 0
+    Organizations:
+    Policies:
         Readers:
             Type: ImplicitMeta
             Rule: "ANY Readers"
@@ -68,27 +95,95 @@ Application: &ApplicationDefaults
         Admins:
             Type: ImplicitMeta
             Rule: "MAJORITY Admins"
+        BlockValidation:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+    Capabilities:
+        <<: *OrdererCapabilities
+        
+Channel: &ChannelDefaults
+    Policies:
+        Readers:
+            Type: ImplicitMeta
+            Rule: "ANY Readers"
+        Writers:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+        Admins:
+            Type: ImplicitMeta
+            Rule: "ANY Admins"
+    Capabilities:
+        <<: *ChannelCapabilities
+
+
+Application: &ApplicationDefaults
+    Policies: &ApplicationPolicies
+        Readers:
+            Type: ImplicitMeta
+            Rule: "ANY Readers"
+        Writers:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+        Admins:
+            Type: ImplicitMeta
+            Rule: "ANY Admins"
+        LifecycleEndorsement:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Endorsement"
+        Endorsement:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Endorsement"
+
+    Capabilities:
+        <<: *ApplicationCapabilities
     Organizations:
 
-Capabilities:
-    Application: &ApplicationCapabilities
-        V1_4_2: true
 
-################################################################################
-#
-#   Profile
-#
-#   - Different configuration profiles may be encoded here to be specified
-#   as parameters to the configtxgen tool
-#
-################################################################################
+# Capabilities:
+#     Application: &ApplicationCapabilities
+#         V2_0: true
+
+
 Profiles:
+    OrgOrdererGenesis:
+        <<: *ChannelDefaults
+        Orderer:
+            <<: *OrdererDefaults
+            Organizations:
+                - *OrdererOrg
+            Capabilities:
+                <<: *OrdererCapabilities
+        Consortiums:
+            SampleConsortium:
+                Organizations:
+                    - *482solutionsOrg
     TestChannel:
         Consortium: SampleConsortium
+        <<: *ChannelDefaults
         Application:
             <<: *ApplicationDefaults
             Organizations:
-                - *482solutions
+                - *482solutionsOrg
             Capabilities:
                 <<: *ApplicationCapabilities
-
+            Policies:
+                <<: *ApplicationPolicies
+                Admins:
+                    Type: Signature
+                    Rule: "OR('482solutionsOrg.member')"
+###
+###
+###    SampleSingleMSPSolo:
+###        <<: *ChannelDefaults
+###        Orderer:
+###            <<: *OrdererDefaults
+###            Addresses:
+###                - 172.28.0.5:7050
+###            Organizations:
+###                - *482solutions        
+###        Consortiums:
+###            SampleConsortium:
+###                Organizations:
+###                    - *482solutions
+###
+###

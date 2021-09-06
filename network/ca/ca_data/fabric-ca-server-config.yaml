@@ -71,7 +71,7 @@ registry:
      - name: admin
        pass: password
        type: admin
-       affiliation: "482solutions.prj-fabric"
+       affiliation: 
        attrs:
           hf.Registrar.Roles: "*"
           hf.Registrar.DelegateRoles: "*"
@@ -131,7 +131,6 @@ ldap:
 #############################################################################
 affiliations:
   482solutions:
-    - prj-fabric
 
 signing:
     default:
@@ -181,7 +180,6 @@ csr:
         ST: "Odeska oblast"
         L: Odessa
         O: 482.solutions
-        OU: prj-fabric
    hosts:
      - ca.482.solutions
      - localhost

@@ -45,7 +45,7 @@ docker run --rm --network hlf2 --name fabric_ca_client \
 -e "FABRIC_CA_CLIENT_TLS_CERTFILES=/etc/hyperledger/fabric-ca-server/ca-cert.pem" \
 -v $(pwd)/admin_data:/etc/hyperledger/fabric-ca-server \
 -v $(pwd)/network/ca/ca_data/ca-cert.pem:/etc/hyperledger/fabric-ca-server/ca-cert.pem hyperledger/fabric-ca:1.4.9 \
-sh -c 'sleep 5 && fabric-ca-client register --id.name orderer --id.affiliation 482solutions.prj-fabric --id.secret passwd --id.type orderer'
+sh -c 'sleep 5 && fabric-ca-client register --id.name orderer --id.secret passwd --id.type orderer'
 
 
 echo "${yellow} -----5.Enroll orderer account----- ${reset}"
@@ -115,7 +115,7 @@ docker run --rm --network hlf2 --name fabric_ca_client \
 -e "FABRIC_CA_CLIENT_TLS_CERTFILES=/etc/hyperledger/fabric-ca-server/ca-cert.pem" \
 -v $(pwd)/admin_data:/etc/hyperledger/fabric-ca-server \
 -v $(pwd)/network/ca/ca_data/ca-cert.pem:/etc/hyperledger/fabric-ca-server/ca-cert.pem hyperledger/fabric-ca:1.4.9 \
-sh -c 'sleep 5 && fabric-ca-client register --id.name peer1 --id.affiliation 482solutions.prj-fabric --id.secret passwd --id.type peer'
+sh -c 'sleep 5 && fabric-ca-client register --id.name peer1 --id.secret passwd --id.type peer'
 
 echo "${yellow} -----9.Enroll peer account----- ${reset}"
 
@@ -127,7 +127,7 @@ docker run --rm --network hlf2 --name fabric_ca_client \
 sh -c 'sleep 5 && fabric-ca-client enroll -u https://peer1:passwd@ca.482.solutions:7054'
 
 
-echo "${yellow} -----6.1.Generating the peer-tls certificates----- ${reset}"
+echo "${yellow} -----10.Generating the peer-tls certificates----- ${reset}"
 docker run --rm --network hlf2 --name fabric_ca_client \
 -e "FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server" \
 -e "FABRIC_CA_CLIENT_TLS_CERTFILES=/etc/hyperledger/fabric-ca-server/ca-cert.pem" \
@@ -141,7 +141,7 @@ cp ${PWD}/network/peer/peer_data/tls/keystore/*   ${PWD}/network/peer/peer_data/
 
 
 
-echo "${yellow} -----10.Build node MSP----- ${reset}"
+echo "${yellow} -----11.Build node MSP----- ${reset}"
 
 mkdir -p ./network/peer/peer_data/msp/admincerts
 cp ./admin_data/msp/signcerts/cert.pem ./network/peer/peer_data/msp/admincerts/
@@ -149,25 +149,91 @@ cp ./admin_data/msp/signcerts/cert.pem ./network/peer/peer_data/msp/admincerts/
 # mkdir -p ./network/peer/peer_data/msp/cacerts
 # cp ./network/ca/ca_data/ca-cert.pem  ./network/peer/peer_data/msp/cacerts
 
-echo "${yellow} -----11.Run Fabric Peer Node----- ${reset}"
+echo "${yellow} -----12.Run Fabric Peer Node----- ${reset}"
 
 docker-compose -f ./network/peer/peer1_docker-compose.yaml up -d
 
-exit(0)
+
+
+
+
+
+
+
+# docker run --rm --network hlf2 --name cli \
+# -e "GOPATH=/opt/gopath" \
+# -e CORE_PEER_TLS_ENABLED=true \
+# -e CORE_PEER_LOCALMSPID="482solutions" \
+# -e CORE_PEER_TLS_ROOTCERT_FILE/opt/gopath/src/github.com/hyperledger/testchannel/tls/ca.crt \
+# -e CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/msp \
+# -e CORE_PEER_ADDRESS=172.28.0.4:7051 \
+# -e "CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock" \
+# -e "FABRIC_CFG_PATH=/opt/gopath/src/github.com/hyperledger/fabric/" \
+# -w="/opt/gopath/src/github.com/hyperledger/testchannel/" \
+# -v $(pwd)/network/ordererchannel/peer/:/opt/gopath/src/github.com/hyperledger/fabric/ \
+# -v $(pwd)/network/testchannel:/opt/gopath/src/github.com/hyperledger/testchannel/ hyperledger/fabric-tools:1.4 \
+# sh -c 'sleep 5 && configtxgen -asOrg 482solutions -channelID testchannel -configPath $(pwd) -outputCreateChannelTx ./testchannel_create.tx -profile TestChannel'
+
+
+echo "${yellow} -----13.----- ${reset}"
+
+cp -r /home/andrii/woden-network/network/peer/peer_data/msp /home/andrii/woden-network/network/testchannel
+
+cp -r /home/andrii/woden-network/network/peer/peer_data/tls /home/andrii/woden-network/network/testchannel
+
+#  need to refactor: -e CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/testchannel/tls/ca.crt \
 
 docker run --rm --network hlf2 --name cli \
 -e "GOPATH=/opt/gopath" \
+-e CORE_PEER_TLS_ENABLED=true \
+-e CORE_PEER_LOCALMSPID="482solutionsMSP" \
+-e CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/testchannel/tls/ca.crt \
+-e CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/msp \
+-e CORE_PEER_ADDRESS=172.28.0.4:7051 \
 -e "CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock" \
--e "FABRIC_CFG_PATH=/opt/gopath/src/github.com/hyperledger/fabric/" \
 -w="/opt/gopath/src/github.com/hyperledger/testchannel/" \
--v $(pwd)/network/peer/peer_data/:/opt/gopath/src/github.com/hyperledger/fabric/ \
--v $(pwd)/network/testchannel:/opt/gopath/src/github.com/hyperledger/testchannel/ hyperledger/fabric-tools:1.4 \
-sh -c 'sleep 5 && configtxgen -asOrg 482solutions -channelID testchannel -configPath $(pwd) -outputCreateChannelTx ./testchannel_create.tx -profile TestChannel'
+-v $(pwd)/network/testchannel/:/opt/gopath/src/github.com/hyperledger/testchannel/ hyperledger/fabric-tools:1.4 \
+sh -c 'sleep 5 && configtxgen -asOrg 482solutionsOrg -channelID channeltestchannel -configPath $(pwd) -outputCreateChannelTx ./testchannel_create.tx -profile TestChannel'
 
 
+echo "${yellow} -----14.----- ${reset}"
 
+#  need to refactor: -e CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/testchannel/tls/ca.crt \
 
+#need to refactor path of 'MSPDir' in all conigtx.yaml (need to be simple and universal for all cases)
 
+docker run --rm --network hlf2 --name cli \
+-e "GOPATH=/opt/gopath" \
+-e CORE_PEER_TLS_ENABLED=true \
+-e CORE_PEER_LOCALMSPID="482solutionsMSP" \
+-e CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/testchannel/tls/ca.crt \
+-e CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/testchannel/msp \
+-e CORE_PEER_ADDRESS=172.28.0.4:7051 \
+-e "CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock" \
+-w="/opt/gopath/src/github.com/hyperledger/testchannel/" \
+-v $(pwd)/network/testchannel/:/opt/gopath/src/github.com/hyperledger/testchannel/ hyperledger/fabric-tools:1.4 \
+sh -c 'sleep 5 && peer channel create -c channeltestchannel --file /opt/gopath/src/github.com/hyperledger/testchannel/testchannel_create.tx --orderer 'orderer.482.solutions:7050'  --tls --cafile /opt/gopath/src/github.com/hyperledger/testchannel/tls/tlscacerts/tls-ca-482-solutions-7054.pem'
+
+exit(0)
+
+# docker run --rm --network hlf2 --name cli \
+# -e "GOPATH=/opt/gopath" \
+# -e "CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock" \
+# -w="/opt/gopath/src/github.com/hyperledger/ordererchannel/" \
+# -v $(pwd)/network/ordererchannel/:/opt/gopath/src/github.com/hyperledger/ordererchannel/ hyperledger/fabric-tools:1.4 \
+# sh -c 'sleep 5 && configtxgen -inspectBlock /opt/gopath/src/github.com/hyperledger/ordererchannel/ordererchannel.block'
+
+docker run --rm --network hlf2 --name cli \
+-e "GOPATH=/opt/gopath" \
+-e CORE_PEER_TLS_ENABLED=true \
+-e CORE_PEER_LOCALMSPID="482solutionsMSP" \
+-e CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/testchannel/tls/ca.crt \
+-e CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/testchannel/msp \
+-e CORE_PEER_ADDRESS=172.28.0.4:7051 \
+-e "CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock" \
+-w="/opt/gopath/src/github.com/hyperledger/testchannel/" \
+-v $(pwd)/network/testchannel/:/opt/gopath/src/github.com/hyperledger/testchannel/ hyperledger/fabric-tools:1.4 \
+sh -c 'sleep 500 && '
 
 
 

@@ -15,7 +15,8 @@ peer:
             interval: 60s
             timeout: 20s
     gossip:
-        bootstrap: 127.0.0.1:7051
+        bootstrap: 0.0.0.0:7051
+            #127.0.0.1:7051
         useLeaderElection: true
         orgLeader: false
         membershipTrackerInterval: 5s
@@ -163,7 +164,7 @@ peer:
     # to match the name of one of the MSPs in each of the channel
     # that this peer is a member of. Otherwise this peer's messages
     # will not be identified as valid by other nodes.
-    localMspId: 482solutions
+    localMspId: 482solutionsMSP
 
     # CLI common client config options
     client:
