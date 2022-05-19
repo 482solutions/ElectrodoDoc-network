@@ -1,4 +1,4 @@
-# Woden (chain codes and network configuration)
+# ElectrodoDoc (chain codes and network configuration)
 
 ## Prerequisites
 
