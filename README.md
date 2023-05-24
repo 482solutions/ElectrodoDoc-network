@@ -3,7 +3,7 @@
 
 
 ```
-cd ELECTRODO
+cd ElectrodoDoc-network
 
 wget https://github.com/hyperledger/fabric/releases/download/v2.2.11/hyperledger-fabric-linux-amd64-2.2.11.tar.gz
 
@@ -17,15 +17,6 @@ tar xf hyperledger-fabric-ca-linux-amd64-1.5.6.tar.gz
 
 ```bash
 cd test-network
-
-# modify 'network.sh' :
-nano network.sh
-
-# change 'IMAGETAG' to :
-IMAGETAG="2.2.11"
-# and 'CA_IMAGETAG' to :
-CA_IMAGETAG="1.5.6"
-
 
 ./network.sh up createChannel -ca -c mychannel -s couchdb -verbose
 
