@@ -1,8 +1,10 @@
 ### Clone repository specific branch
-`git clone https://github.com/482solutions/ElectrodoDoc-network.git -b HLF_v_2_2_11 --single-branch`
+```bash
+git clone https://github.com/482solutions/ElectrodoDoc-network.git -b HLF_v_2_2_11 --single-branch
+```
 
 ### Download binaries
-```
+```bash
 cd ElectrodoDoc-network
 
 wget https://github.com/hyperledger/fabric/releases/download/v2.2.11/hyperledger-fabric-linux-amd64-2.2.11.tar.gz
@@ -20,11 +22,11 @@ cd test-network
 
 ./network.sh up createChannel -ca -c mychannel -s couchdb -verbose
 
-./network.sh deployCC -ccn wodencc -ccp ../contracts/ -ccl node
+./network.sh deployCC -ccn wodencc -ccp ../contracts/ -ccl javascript
 ```
 
 ### Stop Hyperledger Fabric network
-```
+```bash
 cd test-network
 
 ./network.sh down
