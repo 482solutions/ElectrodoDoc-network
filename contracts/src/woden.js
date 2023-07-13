@@ -1,20 +1,11 @@
 'use strict';
 
 const { Contract } = require('fabric-contract-api');
-const { ClientIdentity } = require('fabric-shim');
 
 class Woden extends Contract {
 
-  constructor() {
-    super('org.fabric.wodencontract');
-  }
-
-  async instantiate(ctx) {
-    await ctx.stub.putState('woden', 'Welcome to chaincode');
-  }
-
   async saveFolder(ctx, name, hash, parentHash) {
-    const identity = new ClientIdentity(ctx.stub);
+    const identity = ctx.ClientIdentity;
     const userId = identity.cert.subject.commonName;
 
     let folder = {
@@ -89,7 +80,7 @@ class Woden extends Contract {
   }
 
   async getFolder(ctx, hash) {
-    const identity = new ClientIdentity(ctx.stub);
+    const identity = ctx.ClientIdentity;
     const userId = identity.cert.subject.commonName;
 
     let folderAsBytes = await ctx.stub.getState(hash);
@@ -135,7 +126,7 @@ class Woden extends Contract {
   }
 
   async saveFile(ctx, name, hash, cid, parentHash, type) {
-    const identity = new ClientIdentity(ctx.stub);
+    const identity = ctx.ClientIdentity;
     const userId = identity.cert.subject.commonName;
     const parentFolderAsBytes = await ctx.stub.getState(parentHash);
     if (!parentFolderAsBytes || parentFolderAsBytes.toString().length <= 0) {
@@ -198,7 +189,7 @@ class Woden extends Contract {
   }
 
   async updateFile(ctx, hash, cid) {
-    const identity = new ClientIdentity(ctx.stub);
+    const identity = ctx.ClientIdentity;
     const userId = identity.cert.subject.commonName;
     let fileAsBytes = await ctx.stub.getState(hash);
     if (!fileAsBytes || fileAsBytes.toString().length <= 0) {
@@ -227,7 +218,7 @@ class Woden extends Contract {
   }
 
   async getFile(ctx, hash) {
-    const identity = new ClientIdentity(ctx.stub);
+    const identity = ctx.ClientIdentity;
     const userId = identity.cert.subject.commonName;
     let fileAsBytes = await ctx.stub.getState(hash);
     if (!fileAsBytes || fileAsBytes.toString().length <= 0) {
@@ -252,7 +243,7 @@ class Woden extends Contract {
   }
 
   async changeOwnership(ctx, hash, newOwner, rootThatShared, hashForShare) {
-    const identity = new ClientIdentity(ctx.stub);
+    const identity = ctx.ClientIdentity;
     const userId = identity.cert.subject.commonName;
     let objectAsBytes = await ctx.stub.getState(hash);
     if (!objectAsBytes || objectAsBytes.toString().length <= 0) {
@@ -345,7 +336,7 @@ class Woden extends Contract {
   }
 
   async changePermissions(ctx, hash, login, permissions, hashForShare) {
-    const identity = new ClientIdentity(ctx.stub);
+    const identity = ctx.ClientIdentity;
     const userId = identity.cert.subject.commonName;
     let objectAsBytes = await ctx.stub.getState(hash);
     if (!objectAsBytes || objectAsBytes.toString().length <= 0) {
@@ -435,7 +426,7 @@ class Woden extends Contract {
   }
 
   async revokePermissions(ctx, hash, login, permissions, hashForShare) {
-    const identity = new ClientIdentity(ctx.stub);
+    const identity = ctx.ClientIdentity;
     const userId = identity.cert.subject.commonName;
     let objectAsBytes = await ctx.stub.getState(hash);
     if (!objectAsBytes || objectAsBytes.toString().length <= 0) {
@@ -513,7 +504,7 @@ class Woden extends Contract {
   }
 
   async getFolderTree(ctx, hash) {
-    const identity = new ClientIdentity(ctx.stub);
+    const identity = ctx.ClientIdentity;
     const userId = identity.cert.subject.commonName;
 
     let folderAsBytes = await ctx.stub.getState(hash);
@@ -546,7 +537,7 @@ class Woden extends Contract {
   }
 
   async createVoting(ctx, hash, votingHash, dueDate, variants, excludeUsers, description, rootHash) {
-    const identity = new ClientIdentity(ctx.stub);
+    const identity = ctx.ClientIdentity;
     const userId = identity.cert.subject.commonName;
     const fileForVotingHash = await ctx.stub.getState(hash);
     if (!fileForVotingHash || fileForVotingHash.toString().length <= 0) {
@@ -655,7 +646,7 @@ class Woden extends Contract {
   }
 
   async updateVoting(ctx, hash, variant) {
-    const identity = new ClientIdentity(ctx.stub);
+    const identity = ctx.ClientIdentity;
     const userId = identity.cert.subject.commonName;
     let votingAsBytes = await ctx.stub.getState(hash);
     if (!votingAsBytes || votingAsBytes.toString().length <= 0) {
