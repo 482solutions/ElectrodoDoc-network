@@ -1,43 +1,33 @@
-# ElectrodoDoc (chain codes and network configuration)
-
-## Prerequisites
-
-- Docker and Docker Compose
-- Fabric binaries ([downloaded by `./byfn.sh` to the `./fabric-samples/bin`](https://hyperledger-fabric.readthedocs.io/en/release-1.4/build_network.html))
-
-## How to run:
-
-```
-- ./deploy.sh
+### Clone repository specific branch
+```bash
+git clone https://github.com/482solutions/ElectrodoDoc-network.git -b HLF_v_2_2_11 --single-branch
 ```
 
-If you need to clear all data please run: 
+### Download binaries
+```bash
+cd ElectrodoDoc-network
+
+wget https://github.com/hyperledger/fabric/releases/download/v2.2.11/hyperledger-fabric-linux-amd64-2.2.11.tar.gz
+
+tar xf hyperledger-fabric-linux-amd64-2.2.11.tar.gz 
+
+wget https://github.com/hyperledger/fabric-ca/releases/download/v1.5.6/hyperledger-fabric-ca-linux-amd64-1.5.6.tar.gz
+
+tar xf hyperledger-fabric-ca-linux-amd64-1.5.6.tar.gz
+
 ```
-- docker ps -a -q | xargs -n 1 -P 8 -I {} docker stop {}
-- docker ps -a -q | xargs -n 1 -P 8 -I {} docker rm {} 
-- docker volume prune -f
-- docker system prune -a -f
+### Run Hypereledger Fabric network
+```bash
+cd test-network
+
+./network.sh up createChannel -ca -c mychannel -s couchdb -verbose
+
+./network.sh deployCC -ccn wodencc -ccp ../contracts/ -ccl javascript
 ```
 
-## How to test:
+### Stop Hyperledger Fabric network
+```bash
+cd test-network
+
+./network.sh down
 ```
-- cd contracts
-- nvm use 8.9.0
-- npm i
-- npm test
-```
-## Client configuration
-
-Some operations may be performed only while using the `admin` MSP. The MSP to be
-used can be set with the `CORE_PEER_MSPCONFIGPATH` environment variable. To
-connect to an appropriate peer (for the `peer` command) you must use the
-configuration from `<repository_root>/network/peer/data`. The path must be set
-with the `FABRIC_CFG_PATH` environment variable.
-
-## Network configuration
-
-- [Certification authority](./network/ca/README.md)
-- [Orderer](./network/orderer/README.md)
-- [Peer](./network/peer/README.md)
-- [Test channel](./network/testchannel/README.md)
-- [Chaincode](./contracts/README.md)
